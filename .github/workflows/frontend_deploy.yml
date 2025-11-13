@@ -1,0 +1,53 @@
+name: Deploy Nuxt PWA (Frontend)
+
+# Dipicu saat push ke branch 'main'
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy_frontend:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Checkout kode dari GitHub
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Setup SSH Agent dan Tambahkan Kunci Privat
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # 3. Deployment Nuxt Service via SSH
+      - name: Deploy Nuxt Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          script: |
+            # 🟢 DEPLOY_DIR: Path ke folder ROOT DOCKER COMPOSE
+            DEPLOY_DIR="${{ secrets.DEPLOY_DIR }}"
+            
+            # 🟢 APP_DIR: Path ABSOLUT repositori Frontend (subfolder)
+            APP_DIR="$DEPLOY_DIR/shared_ladger_app"
+            
+            # Ganti 'nuxt-app' dengan nama service Nuxt/Frontend di docker-compose.yml Anda
+            NUXT_SERVICE_NAME="nuxt-app" 
+
+            echo "1. Pulling latest Nuxt code into $APP_DIR..."
+            # Pindah ke folder repositori Nuxt dan pull
+            cd $APP_DIR
+            git pull origin main
+
+            echo "2. Pindah ke root Docker Compose: $DEPLOY_DIR"
+            # ⚠️ KEMBALI ke root untuk menjalankan Docker Compose
+            cd $DEPLOY_DIR
+            
+            echo "3. Building and restarting Nuxt service: $NUXT_SERVICE_NAME"
+            # Perintah Docker Compose harus dijalankan dari folder yang berisi docker-compose.yml
+            sudo docker compose up -d --build --force-recreate $NUXT_SERVICE_NAME
+            
+            echo "Deployment Frontend (PWA) Completed."
