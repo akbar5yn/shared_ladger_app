@@ -40,6 +40,6 @@ jobs:
             cd $DEPLOY_DIR
             
             echo "3. Building and restarting Nuxt service: $NUXT_SERVICE_NAME"
-            sudo docker compose up -d --build --force-recreate $NUXT_SERVICE_NAME
+            docker compose up -d --build --force-recreate $NUXT_SERVICE_NAME
             
             echo "Deployment Frontend (PWA) Completed."
