@@ -1,5 +1,5 @@
 <template>
-  <h1>Dashboard</h1>
+  <h1>Selamat datang hehe</h1>
   <p v-if="isVisible">{{ message }}</p>
   <p>{{ userInfo?.name }}</p>
 </template>
