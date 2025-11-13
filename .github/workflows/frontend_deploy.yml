@@ -28,7 +28,7 @@ jobs:
           script: |
             DEPLOY_DIR="${{ secrets.DEPLOY_DIR }}"
             APP_DIR="$DEPLOY_DIR/shared_ladger_app"
-            NUXT_SERVICE_NAME="nuxt-app" 
+            NUXT_SERVICE_NAME="shared_ledger_app" 
 
             echo "1. Pulling latest Nuxt code into $APP_DIR..."
             
