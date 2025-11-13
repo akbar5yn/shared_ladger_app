@@ -15,14 +15,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Deployment Nuxt Service via SSH (Sekarang dengan Kunci Langsung)
+      # 2. Deployment Nuxt Service via SSH (Sekarang dengan Kunci Langsung dan PORT)
       - name: Deploy Nuxt Service
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          # 🟢 FIX: Masukkan Kunci Privat secara langsung ke action
           key: ${{ secrets.SSH_PRIVATE_KEY }} 
+          port: ${{ secrets.SSH_PORT }} 
           
           # Script deployment
           script: |
