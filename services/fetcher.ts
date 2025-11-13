@@ -13,25 +13,23 @@ export interface FetchOptions {
 
 
 export const useFetcher = () => {
-    const config = useRuntimeConfig();
-    const { logout, token } = useAuth();
-
-    const authHeaders = computed(() => {
-        const headers: HeadersInit = {};
-        if (token.value) {
-            headers['Authorization'] = `Bearer ${token.value}`;
-        }
-        headers['Content-Type'] = 'application/json';
-        return headers;
-    });
-
 
     const call = async <T = any>(
         url: string,
         method: FetchMethod,
         options: FetchOptions = {},
     ): Promise<{ data: T | null, error: string | null }> => {
+        const { token, logout } = useAuth();
+        const config = useRuntimeConfig();
 
+        const authHeaders = computed(() => {
+            const headers: HeadersInit = {};
+            if (token.value) {
+                headers['Authorization'] = `Bearer ${token.value}`;
+            }
+            headers['Content-Type'] = 'application/json';
+            return headers;
+        });
         try {
             const baseURL = config.public.apiBase as string | undefined;
             const fetchOptions: OFetchOptions<"json"> = {
