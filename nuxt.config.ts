@@ -94,10 +94,14 @@ export default defineNuxtConfig({
     },
 
     workbox: {
-      navigateFallback: '/'
+      navigateFallback: '/',
+      navigateFallbackDenylist: [
+        /\/__/,
+        /\/api\//,
+      ],
     },
     devOptions: {
-      enabled: true,
+      enabled: false,
       type: "module"
     }
   },
