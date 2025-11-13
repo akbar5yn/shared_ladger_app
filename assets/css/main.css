@@ -1,1 +1,14 @@
 @import "tailwindcss";
+@import "./_typography.css";
+
+@font-face {
+    font-family: 'Gabarito';
+    src: url('./../fonts/Gabarito/Gabarito-VariableFont_wght.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+body {
+    font-family: 'Gabarito', sans-serif;
+}

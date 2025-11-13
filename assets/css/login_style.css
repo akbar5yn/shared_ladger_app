@@ -1,0 +1,292 @@
+@property --angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+}
+
+@keyframes spin {
+    from {
+        --angle: 0deg;
+    }
+
+    to {
+        --angle: 360deg;
+    }
+}
+
+@keyframes loadingSpin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes moveOrb1 {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    100% {
+        transform: translate(150px, 200px) scale(1.1);
+    }
+}
+
+@keyframes moveOrb2 {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    100% {
+        transform: translate(-250px, -100px) scale(0.9);
+    }
+}
+
+@keyframes moveOrb3 {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(100px, -50px) rotate(360deg);
+    }
+}
+
+.ambient-background {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f5faff;
+    position: absolute;
+    z-index: -1;
+}
+
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.75;
+    z-index: 1;
+}
+
+.orb-1 {
+    width: 400px;
+    height: 400px;
+    background: #fff176;
+    left: -15%;
+    top: -15%;
+    animation: moveOrb1 18s ease-in-out infinite alternate;
+}
+
+.orb-2 {
+    width: 300px;
+    height: 300px;
+    background: #4dd0e1;
+    bottom: 10%;
+    right: 10%;
+    animation: moveOrb2 22s cubic-bezier(0.42, 0, 0.58, 1) infinite alternate;
+}
+
+.orb-3 {
+    width: 200px;
+    height: 200px;
+    background: #ff4885;
+    top: 50%;
+    left: 30%;
+    animation: moveOrb3 15s linear infinite alternate;
+}
+
+.content-wrapper {
+    color: #333;
+    padding: 10px 30px 30px 30px;
+    width: 90vw;
+    max-width: 450px;
+    overflow: auto;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 20px;
+    border: 1px solid white;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.content-wrapper input::placeholder {
+    color: #666;
+}
+
+.field-container {
+    background: rgba(255, 255, 255, 1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    padding: 0px 10px;
+}
+
+
+
+#email,
+#password {
+    outline: none;
+    color: #333;
+    padding: 8px 10px;
+}
+
+.border-animasi-wrapper {
+    position: relative;
+    padding: 0 3px;
+}
+
+.border-animasi-wrapper::after {
+    content: "";
+    position: absolute;
+    background: conic-gradient(from var(--angle), #17afb0, #4dd0e1, #17afb0);
+    z-index: -1;
+    width: 100%;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    border-radius: 12px;
+    padding: 22px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.border-animasi-wrapper::before {
+    content: "";
+    position: absolute;
+    background: conic-gradient(from var(--angle), #17afb0, #4dd0e1, #17afb0);
+    inset: -1px;
+    z-index: -1;
+    border-radius: 30px;
+    filter: blur(8px);
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.border-animasi-wrapper:focus-within::after {
+    opacity: 1;
+    transform: scale(1);
+    animation: spin 1.5s linear infinite;
+}
+
+.border-animasi-wrapper:focus-within::before {
+    opacity: 0.7;
+}
+
+.google-button-wrapper {
+    position: relative;
+    padding: 2px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.google-button-inner {
+    z-index: 10;
+    position: relative;
+    background-color: white;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.google-button-wrapper::after {
+    content: "";
+    position: absolute;
+    background: conic-gradient(from var(--angle),
+            #4285f4,
+            #34a853,
+            #fbbc05,
+            #ea4335,
+            #4285f4);
+    inset: 0;
+    z-index: -1;
+    border-radius: 14px;
+    opacity: 0;
+    transform: scale(0.99);
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.google-button-wrapper::before {
+    content: "";
+    position: absolute;
+    background: conic-gradient(from var(--angle),
+            #4285f4,
+            #34a853,
+            #fbbc05,
+            #ea4335,
+            #4285f4);
+    inset: -2px;
+    z-index: -2;
+    border-radius: 16px;
+    filter: blur(10px);
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.google-icon-gradient {
+    background: linear-gradient(to right, #4285f4, #34a853, #fbbc05, #ea4335);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    font-weight: bold;
+    font-size: 1.125rem;
+}
+
+.google-button-wrapper:hover::after,
+.google-button-wrapper:focus-within::after {
+    opacity: 1;
+    transform: scale(1);
+    animation: spin 1.5s linear infinite;
+}
+
+.google-button-wrapper:hover::before,
+.google-button-wrapper:focus-within::before {
+    opacity: 0.6;
+}
+
+/* NOTE Login btn style */
+/* .login-btn .loading{
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.6);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+} */
+.login-btn .loading {
+    position: relative;
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.login-btn .loading::after {
+    content: "";
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    /* Membuat kotak 20x20px menjadi lingkaran sempurna */
+
+    /* Membuat Efek Spinner: Border 3/4 Transparan */
+    border: 3px solid rgba(255, 255, 255, 0.6);
+    /* Border putih transparan */
+    border-top-color: #fff;
+    /* Hanya border atas yang berwarna solid (putih), menciptakan efek pisah */
+
+    /* Menerapkan Animasi */
+    animation: loadingSpin 1s linear infinite;
+}
