@@ -8,7 +8,6 @@ const APP_SHORT_NAME = isDev
   : process.env.NUXT_PUBLIC_APP_NAME_SHORT_STG;
 const APP_DESCRIPTION = process.env.NUXT_PUBLIC_APP_NAME_DESCRIPTION || 'this is my idea app for shared ledger';
 
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -55,6 +54,13 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     'pinia-plugin-persistedstate/nuxt'
   ],
+  pinia: {
+    storesDirs: []
+  },
+  typescript: {
+    typeCheck: true,
+    strict: true,
+  },
   pwa: {
     base: '/',
     manifest: {
