@@ -16,15 +16,17 @@
         />
       </template>
 
-      <!-- <template #register>
+      <template #register>
         <RegisterForm />
-      </template> -->
+      </template>
     </AuthFlipContainer>
   </div>
 </template>
 
 <script setup lang="ts">
+import AuthFlipContainer from "~/components/auth/AuthFlipContainer.vue";
 import LoginForm from "~/components/auth/LoginForm.vue";
+import RegisterForm from "~/components/auth/RegisterForm.vue";
 
 definePageMeta({
   middleware: ["guest"], // Hanya bisa diakses oleh tamu
