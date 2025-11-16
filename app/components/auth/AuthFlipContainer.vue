@@ -1,7 +1,7 @@
 <template>
   <div class="flip-container">
     <div class="flipper" :class="{ flipped: !isLogin }">
-      <div class="card front flex justify-center items-center">
+      <div class="card front">
         <slot name="login"></slot>
       </div>
 
@@ -40,6 +40,9 @@ defineProps<{
 }
 
 .card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 100%;
   height: 100%;
   position: absolute;

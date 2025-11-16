@@ -1,7 +1,13 @@
 import tailwindcss from "@tailwindcss/vite";
-import { VitePWA } from 'vite-plugin-pwa'
 
-// https://nuxt.com/docs/api/configuration/nuxt-config
+const isDev = process.env.NODE_ENV === 'development';
+
+const APP_NAME = process.env.NUXT_PUBLIC_APP_NAME || 'Shared Ledger';
+const APP_SHORT_NAME = isDev
+  ? process.env.NUXT_PUBLIC_APP_NAME_SHORT_STG
+  : process.env.NUXT_PUBLIC_APP_NAME_SHORT_STG;
+const APP_DESCRIPTION = process.env.NUXT_PUBLIC_APP_NAME_DESCRIPTION || 'this is my idea app for shared ledger';
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -9,7 +15,7 @@ export default defineNuxtConfig({
     head: {
       title: 'Shared Ledger',
       meta: [
-        { name: 'Shared Ledger App', content: 'Deskripsi singkat aplikasi saya.' }
+        { name: APP_NAME, content: APP_DESCRIPTION }
       ],
     }
   },
@@ -48,12 +54,19 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     'pinia-plugin-persistedstate/nuxt'
   ],
+  pinia: {
+    storesDirs: []
+  },
+  typescript: {
+    typeCheck: true,
+    strict: true,
+  },
   pwa: {
     base: '/',
     manifest: {
-      name: "Shared ledger app",
-      short_name: 'SL APP',
-      description: "this is my idea app for shared ledger",
+      name: APP_NAME,
+      short_name: APP_SHORT_NAME,
+      description: APP_DESCRIPTION,
       icons: [
         {
           src: 'icons/icon_64x64.png',
@@ -101,7 +114,7 @@ export default defineNuxtConfig({
       ],
     },
     devOptions: {
-      enabled: false,
+      enabled: true,
       type: "module"
     }
   },

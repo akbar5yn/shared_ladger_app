@@ -1,26 +1,6 @@
 <template>
-  <main class="content-wrapper flex flex-col">
-    <ClientOnly>
-      <Lottie
-        width="50%"
-        height="50%"
-        class="relative"
-        name="online_investment"
-      />
-      <template #fallback>
-        <div
-          class="flex justify-center items-center relative"
-          style="height: 144px"
-        >
-          <USkeleton
-            class="w-1/2 h-full rounded-lg bg-gray-300 custom-shimmer"
-            :ui="{ rounded: 'rounded-full' }"
-          />
-        </div>
-      </template>
-    </ClientOnly>
-
-    <div class="h-full flex flex-col gap-8 text-base">
+  <WrapperContainer>
+    <div class="h-full flex flex-col gap-5 text-base">
       <section>
         <h1 class="text-xl text-center font-bold">Shared Ledger</h1>
         <p class="text-center text-[12px] mt-2">
@@ -29,7 +9,7 @@
           seamless family connection.
         </p>
       </section>
-      <section class="h-full flex flex-col gap-4 rounded-3xl">
+      <section class="h-fit flex flex-col gap-4 rounded-3xl">
         <form @submit.prevent="emit('submit')" class="flex flex-col gap-2">
           <label for="email" class="text-[13px] font-medium px-[5px]"
             >E-mail</label
@@ -79,12 +59,12 @@
             <span v-else>Sign in</span>
           </button>
         </form>
-        <div class="flex items-center gap-2 justify-center text-gray-600">
-          <div class="h-[0.1px] w-[20%] bg-gray-500"></div>
-          <p>Or Log in with</p>
-          <div class="h-[0.1px] w-[20%] bg-gray-500"></div>
-        </div>
       </section>
+      <div class="flex items-center gap-2 justify-center text-gray-600">
+        <div class="h-[0.1px] w-[20%] bg-gray-500"></div>
+        <p>Or Log in with</p>
+        <div class="h-[0.1px] w-[20%] bg-gray-500"></div>
+      </div>
       <div class="flex gap-2 w-full justify-center">
         <div class="google-button-wrapper w-[50%]">
           <button class="google-button-inner w-full py-2">
@@ -115,10 +95,12 @@
 
       <p v-if="isVisible">{{ message }}</p>
     </div>
-  </main>
+  </WrapperContainer>
 </template>
 
 <script setup lang="ts">
+import WrapperContainer from "./WrapperContainer.vue";
+
 const { isVisible, message } = useNotifier();
 
 const props = defineProps<{
@@ -144,19 +126,3 @@ const formPassword = computed({
   set: (value) => emit("update:password", value),
 });
 </script>
-
-<style scoped>
-.custom-shimmer {
-  background: linear-gradient(to right, #e0e0e0 0%, #f5f5f5 50%, #e0e0e0 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite linear;
-}
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-</style>
