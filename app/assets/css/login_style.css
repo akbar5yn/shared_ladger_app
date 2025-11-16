@@ -102,7 +102,7 @@
 
 .content-wrapper {
     color: #333;
-    padding: 10px 30px 30px 30px;
+    padding: 10px 30px;
     width: 90vw;
     max-width: 450px;
     height: 700px;
@@ -121,10 +121,9 @@
 }
 
 .auth-content {
-    height: 70%;
+    height: 75%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     gap: 20px;
 }
 
@@ -142,7 +141,11 @@
 
 
 #email,
-#password {
+#password,
+#name,
+#email-reg,
+#password-reg,
+#confirm-password-reg {
     outline: none;
     color: #333;
     padding: 8px 10px;
