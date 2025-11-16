@@ -10,9 +10,8 @@
         />
         <template #fallback>
           <div class="flex justify-center items-center h-full p-5">
-            <USkeleton
+            <div
               class="w-1/2 h-full py-10 rounded-lg bg-gray-300 custom-shimmer"
-              :ui="{ rounded: 'rounded-full' }"
             />
           </div>
         </template>
