@@ -1,8 +1,8 @@
 <template>
   <div class="flex flex-col gap-8">
     <header class="dashboard-header glasses">
-      <div class="flex flex-col">
-        <span class="text-gray-600">Hi, {{ userInfo?.name }}</span>
+      <div class="flex flex-col text-white">
+        <span class="">Hi, {{ userInfo?.name }}</span>
         <span>{{ userInfo?.email }}</span>
       </div>
       <ClientOnly>
@@ -21,7 +21,7 @@
     <main class="flex flex-col">
       <section class="card-section flex gap-4 h-[200px]">
         <button class="add-card glasses h-full">
-          <UIcon name="i-heroicons-plus" class="h-5 w-5"></UIcon>
+          <UIcon name="i-heroicons-plus" class="h-5 w-5 text-white"></UIcon>
         </button>
         <UCard class="card-wrapper glasses" :ui="{ root: 'overflow-hidden' }">
           <template #header>
@@ -77,9 +77,10 @@ function onImgLoad() {
 
 <style scoped>
 .glasses {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+  background: linear-gradient(135deg, #cecece41 0%, #4c6e8679 100%);
+
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
   border: 1px solid white;
   border-radius: 12px;
@@ -99,7 +100,6 @@ function onImgLoad() {
 }
 
 .card-wrapper {
-  background: linear-gradient(135deg, #746d6485 0%, #ee616141 100%);
   border-radius: 1.5rem;
   padding: 1.1rem;
   width: 100%;

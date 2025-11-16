@@ -1,10 +1,5 @@
 <template>
   <div class="container relative">
-    <div class="ambient-background overflow-hidden">
-      <div class="orb orb-1"></div>
-      <div class="orb orb-2"></div>
-      <div class="orb orb-3"></div>
-    </div>
     <div class="flex flex-col w-full px-5 pt-8 pb-5">
       <slot />
     </div>
@@ -13,11 +8,12 @@
 
 <style scoped>
 .container {
-  display: flex;
-  justify-content: center;
-  height: 100dvh;
+  background-image: url("/icons/background.png");
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-size: cover;
+  height: 100%;
   width: 100%;
-  z-index: 99;
-  max-width: 100%;
 }
 </style>
