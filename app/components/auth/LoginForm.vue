@@ -1,25 +1,5 @@
 <template>
-  <main class="content-wrapper flex flex-col">
-    <ClientOnly>
-      <Lottie
-        width="50%"
-        height="50%"
-        class="relative"
-        name="online_investment"
-      />
-      <template #fallback>
-        <div
-          class="flex justify-center items-center relative"
-          style="height: 144px"
-        >
-          <USkeleton
-            class="w-1/2 h-full rounded-lg bg-gray-300 custom-shimmer"
-            :ui="{ rounded: 'rounded-full' }"
-          />
-        </div>
-      </template>
-    </ClientOnly>
-
+  <WrapperContainer>
     <div class="h-full flex flex-col gap-8 text-base">
       <section>
         <h1 class="text-xl text-center font-bold">Shared Ledger</h1>
@@ -115,10 +95,12 @@
 
       <p v-if="isVisible">{{ message }}</p>
     </div>
-  </main>
+  </WrapperContainer>
 </template>
 
 <script setup lang="ts">
+import WrapperContainer from "./WrapperContainer.vue";
+
 const { isVisible, message } = useNotifier();
 
 const props = defineProps<{
@@ -144,19 +126,3 @@ const formPassword = computed({
   set: (value) => emit("update:password", value),
 });
 </script>
-
-<style scoped>
-.custom-shimmer {
-  background: linear-gradient(to right, #e0e0e0 0%, #f5f5f5 50%, #e0e0e0 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite linear;
-}
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-</style>

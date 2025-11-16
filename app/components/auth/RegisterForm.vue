@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import WrapperContainer from "./WrapperContainer.vue";
+</script>
+
 <template>
-  <h1>Register</h1>
+  <WrapperContainer></WrapperContainer>
 </template>

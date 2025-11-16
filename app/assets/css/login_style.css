@@ -105,6 +105,7 @@
     padding: 10px 30px 30px 30px;
     width: 90vw;
     max-width: 450px;
+    height: 700px;
     overflow: auto;
     background: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(15px);
@@ -113,6 +114,18 @@
     border: 1px solid white;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
     z-index: 10;
+}
+
+.wrapper-header {
+    height: 25%;
+}
+
+.auth-content {
+    height: 70%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
 }
 
 .content-wrapper input::placeholder {
