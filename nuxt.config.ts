@@ -15,7 +15,8 @@ export default defineNuxtConfig({
     head: {
       title: 'Shared Ledger',
       meta: [
-        { name: APP_NAME, content: APP_DESCRIPTION }
+        { name: APP_NAME, content: APP_DESCRIPTION },
+        { name: 'theme-color', content: '#333' },
       ],
     }
   },
