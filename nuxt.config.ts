@@ -16,7 +16,7 @@ export default defineNuxtConfig({
       title: 'Shared Ledger',
       meta: [
         { name: APP_NAME, content: APP_DESCRIPTION },
-        { name: 'theme-color', content: '#333' },
+        { name: 'theme-color', content: '#11192D' },
       ],
     }
   },
@@ -68,6 +68,9 @@ export default defineNuxtConfig({
       name: APP_NAME,
       short_name: APP_SHORT_NAME,
       description: APP_DESCRIPTION,
+      background_color: '11192D',
+      theme_color: '11192D',
+      display: 'standalone',
       icons: [
         {
           src: 'icons/icon_64x64.png',

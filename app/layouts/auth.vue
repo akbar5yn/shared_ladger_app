@@ -13,8 +13,8 @@
   left: 50%;
   transform: translateX(-50%) rotate(270deg);
 
-  max-width: 600px; /* bisa disesuaikan */
-  pointer-events: none; /* tidak ganggu klik */
+  max-width: 600px;
+  pointer-events: none;
   z-index: 0;
   opacity: 1;
   mix-blend-mode: lighten;
@@ -27,7 +27,7 @@
   width: 100%;
   transform: translateX(-50%) rotate(180deg);
 
-  pointer-events: none; /* tidak ganggu klik */
+  pointer-events: none;
   z-index: 0;
   opacity: 0.6;
   mix-blend-mode: lighten;
@@ -43,8 +43,9 @@
   background: linear-gradient(
     to top,
     #212332 0%,
-    /* paling gelap di atas */ #252525 50%,
-    /* warna dasar */ #0d1724 100% /* makin terang di bawah */
+    #242736 25%,
+    #202020 50%,
+    #0d1724 100%
   );
 
   height: 100dvh;
