@@ -24,111 +24,25 @@
     }
 }
 
-@keyframes moveOrb1 {
-    0% {
-        transform: translate(0, 0) scale(1);
-    }
-
-    100% {
-        transform: translate(150px, 200px) scale(1.1);
-    }
-}
-
-@keyframes moveOrb2 {
-    0% {
-        transform: translate(0, 0) scale(1);
-    }
-
-    100% {
-        transform: translate(-250px, -100px) scale(0.9);
-    }
-}
-
-@keyframes moveOrb3 {
-    0% {
-        transform: translate(0, 0) rotate(0deg);
-    }
-
-    100% {
-        transform: translate(100px, -50px) rotate(360deg);
-    }
-}
-
-.ambient-background {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f5faff;
-    position: absolute;
-    z-index: -1;
-}
-
-.orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(90px);
-    opacity: 0.75;
-    z-index: 1;
-}
-
-.orb-1 {
-    width: 400px;
-    height: 400px;
-    background: #fff176;
-    left: -15%;
-    top: -15%;
-    animation: moveOrb1 18s ease-in-out infinite alternate;
-}
-
-.orb-2 {
-    width: 300px;
-    height: 300px;
-    background: #4dd0e1;
-    bottom: 10%;
-    right: 10%;
-    animation: moveOrb2 22s cubic-bezier(0.42, 0, 0.58, 1) infinite alternate;
-}
-
-.orb-3 {
-    width: 200px;
-    height: 200px;
-    background: #ff4885;
-    top: 50%;
-    left: 30%;
-    animation: moveOrb3 15s linear infinite alternate;
-}
-
-.content-wrapper {
-    color: #333;
-    padding: 10px 30px;
-    width: 90vw;
-    max-width: 450px;
-    height: 700px;
-    overflow: auto;
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border-radius: 20px;
-    border: 1px solid white;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
-    z-index: 10;
-}
-
-.wrapper-header {
-    height: 25%;
+.auth-content input::placeholder {
+    color: #666;
 }
 
 .auth-content {
-    height: 75%;
     display: flex;
     flex-direction: column;
     gap: 20px;
-}
+    padding: 20px 30px;
+    border-radius: 20px;
 
-.content-wrapper input::placeholder {
-    color: #666;
+
+    background: rgba(44, 50, 58, 0.336);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.452);
+    box-shadow:
+        0 -25px 50px -12px rgba(36, 43, 49, 0.774),
+        inset 0 0 0 1px rgba(202, 2, 2, 0.05);
 }
 
 .field-container {

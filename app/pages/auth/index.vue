@@ -1,32 +1,26 @@
 <template>
-  <AuthFlipContainer :is-login="isLogin">
-    <template #login>
-      <LoginForm
-        v-model:email="userLogin.email"
-        v-model:password="userLogin.password"
-        :is-loading="isLoading"
-        @submit="submitLogin"
-        @toggle-mode="isLogin = false"
+  <div class="icon-wrapper">
+    <ClientOnly>
+      <Lottie
+        width="100%"
+        class="absolute left-0 top-0 z-50"
+        name="online_investment"
       />
-    </template>
-
-    <template #register>
-      <RegisterForm
-        v-model:name="userRegister.name"
-        v-model:email="userRegister.email"
-        v-model:password="userRegister.password"
-        v-model:confirm-password="userRegister.confirmPassword"
-        :is-loading="isLoading"
-        @toggle-mode="isLogin = true"
-      />
-    </template>
-  </AuthFlipContainer>
+    </ClientOnly>
+    <div class="shadow-icon"></div>
+  </div>
+  <div class="orb" />
+  <LoginForm
+    v-model:email="userLogin.email"
+    v-model:password="userLogin.password"
+    :is-loading="isLoading"
+    @submit="submitLogin"
+    @toggle-mode="isLogin = false"
+  />
 </template>
 
 <script setup lang="ts">
-import AuthFlipContainer from "~/components/auth/AuthFlipContainer.vue";
 import LoginForm from "~/components/auth/LoginForm.vue";
-import RegisterForm from "~/components/auth/RegisterForm.vue";
 
 definePageMeta({
   middleware: ["guest"],
@@ -43,13 +37,6 @@ const userLogin = ref({
   password: "",
 });
 
-const userRegister = ref({
-  name: "",
-  email: "",
-  password: "",
-  confirmPassword: "",
-});
-
 const submitLogin = () => {
   handleLogin({
     email: userLogin.value.email,
@@ -57,3 +44,49 @@ const submitLogin = () => {
   });
 };
 </script>
+
+<style scoped>
+.icon-wrapper {
+  position: relative;
+  height: 25%;
+  width: 100%;
+}
+
+.shadow-icon {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 0;
+  width: 70%;
+  height: 18px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.808) 0%,
+    rgba(255, 255, 255, 0.37) 40%,
+    rgba(255, 255, 255, 0.13) 80%,
+    rgba(255, 255, 255, 0.856) 100%
+  );
+  filter: blur(6px);
+  border-radius: 50%;
+  animation: dimLight 4.8s linear infinite;
+}
+
+@keyframes dimLight {
+  0% {
+    opacity: 0.5;
+  }
+  25% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0.75;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+</style>
