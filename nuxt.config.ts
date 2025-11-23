@@ -55,6 +55,9 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     'pinia-plugin-persistedstate/nuxt'
   ],
+  plugins: [
+    '~/plugins/register-sw.client.ts'
+  ],
   pinia: {
     storesDirs: []
   },
@@ -68,8 +71,8 @@ export default defineNuxtConfig({
       name: APP_NAME,
       short_name: APP_SHORT_NAME,
       description: APP_DESCRIPTION,
-      background_color: '11192D',
-      theme_color: '11192D',
+      background_color: '#11192D',
+      theme_color: '#11192D',
       display: 'standalone',
       icons: [
         {
