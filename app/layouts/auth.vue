@@ -24,6 +24,7 @@
   position: absolute;
   top: -90px;
   left: 50%;
+  width: 100%;
   transform: translateX(-50%) rotate(180deg);
 
   pointer-events: none; /* tidak ganggu klik */
@@ -33,7 +34,7 @@
 }
 
 .container {
-  padding: 20px 50px;
+  padding: 20px 20px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
