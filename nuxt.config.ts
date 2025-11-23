@@ -56,7 +56,6 @@ export default defineNuxtConfig({
     'pinia-plugin-persistedstate/nuxt'
   ],
   plugins: [
-    '~/plugins/register-sw.client.ts',
     '~/plugins/webview-fallback.client.ts'
   ],
   pinia: {
