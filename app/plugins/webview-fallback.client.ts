@@ -11,30 +11,26 @@ export default defineNuxtPlugin(() => {
     if (typeof navigator !== 'undefined' && /NativeScript/.test(navigator.userAgent)) {
         console.log('[WebView Fallback] NativeScript WebView detected');
 
-        // fallback localStorage
-        const fallbackStorage: Storage = {
-            getItem: (key: string) => {
+        // ----- fallback localStorage -----
+        const ls = window.localStorage;
+        if (ls) {
+            const originalGetItem = ls.getItem;
+            ls.getItem = (key: string) => {
                 console.log(`[localStorage.getItem] key=${key}`);
                 return null;
-            },
-            setItem: (key: string, value: string) => {
+            };
+            ls.setItem = (key: string, value: string) => {
                 console.log(`[localStorage.setItem] key=${key} value=${value}`);
-            },
-            removeItem: (key: string) => {
+            };
+            ls.removeItem = (key: string) => {
                 console.log(`[localStorage.removeItem] key=${key}`);
-            },
-            clear: () => {
+            };
+            ls.clear = () => {
                 console.log('[localStorage.clear]');
-            },
-            key: (index: number) => {
-                console.log(`[localStorage.key] index=${index}`);
-                return null;
-            },
-            length: 0,
-        };
-        window.localStorage = fallbackStorage;
+            };
+        }
 
-        // fallback matchMedia
+        // ----- fallback matchMedia -----
         window.matchMedia = (query: string) => {
             console.log(`[matchMedia] query=${query}`);
             return {
@@ -49,18 +45,20 @@ export default defineNuxtPlugin(() => {
             } as MediaQueryList;
         };
 
-        // fallback dark mode API Nuxt PWA
-        window.wt = {
-            getColorScheme: () => {
-                console.log('[wt.getColorScheme] called');
-                return 'light';
-            },
-            removeColorScheme: () => {
-                console.log('[wt.removeColorScheme] called');
-            },
-        };
+        // ----- fallback dark mode API Nuxt PWA -----
+        if (!window.wt) {
+            window.wt = {
+                getColorScheme: () => {
+                    console.log('[wt.getColorScheme] called');
+                    return 'light';
+                },
+                removeColorScheme: () => {
+                    console.log('[wt.removeColorScheme] called');
+                },
+            };
+        }
 
-        // disable Service Worker
+        // ----- disable Service Worker -----
         Object.defineProperty(navigator, 'serviceWorker', {
             get: () => {
                 console.log('[navigator.serviceWorker] access blocked for WebView');
