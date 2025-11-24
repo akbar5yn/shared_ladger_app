@@ -66,6 +66,7 @@ export default defineNuxtConfig({
     strict: true,
   },
   pwa: {
+    disable: true,
     base: '/',
     manifest: {
       name: APP_NAME,
@@ -112,7 +113,7 @@ export default defineNuxtConfig({
         },
       ]
     },
-
+    registerType: "autoUpdate",
     workbox: {
       navigateFallback: '/',
       navigateFallbackDenylist: [
