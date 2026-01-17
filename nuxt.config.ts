@@ -55,9 +55,6 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     'pinia-plugin-persistedstate/nuxt'
   ],
-  plugins: [
-    '~/plugins/webview-fallback.client.ts'
-  ],
   pinia: {
     storesDirs: []
   },
@@ -66,7 +63,7 @@ export default defineNuxtConfig({
     strict: true,
   },
   pwa: {
-    disable: true,
+    disable: false,
     base: '/',
     manifest: {
       name: APP_NAME,
