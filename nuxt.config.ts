@@ -67,7 +67,7 @@ export default defineNuxtConfig({
     strict: true,
   },
   pwa: {
-    disable: false,
+    disable: true,
     base: '/',
     manifest: {
       name: APP_NAME,

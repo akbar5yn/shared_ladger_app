@@ -10,8 +10,8 @@
 </template>
 
 <script lang="ts" setup>
-import { useThemeStore } from "~/stores/theme";
-const themeStore = useThemeStore();
+import { useUIStore } from "~/stores/ui";
+const themeStore = useUIStore();
 
 onMounted(() => themeStore.initTheme());
 </script>
@@ -36,9 +36,11 @@ onMounted(() => themeStore.initTheme());
 }
 
 .light-layer {
-  background: linear-gradient(to bottom,
-      rgba(255, 170, 0, 0.101) 20%,
-      rgb(255, 255, 255) 50%);
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 170, 0, 0.101) 20%,
+    rgb(255, 255, 255) 50%
+  );
   opacity: 1;
   z-index: -2;
   overflow: hidden;

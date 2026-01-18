@@ -1,7 +1,8 @@
 // stores/theme.ts
-export const useThemeStore = defineStore('theme', {
+export const useUIStore = defineStore('ui', {
     state: () => ({
-        isDark: false
+        isDark: false,
+        isLogoutModalOpen: false
     }),
     actions: {
         toggleTheme() {
@@ -11,6 +12,9 @@ export const useThemeStore = defineStore('theme', {
         initTheme() {
             const saved = localStorage.getItem('theme')
             this.isDark = saved === 'dark'
+        },
+        openLogoutModal(isOpen: boolean) {
+            this.isLogoutModalOpen = isOpen
         }
     }
 })

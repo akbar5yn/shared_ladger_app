@@ -5,7 +5,7 @@
     <div class="layer dark-layer" :class="{ 'active-layer': themeStore.isDark }"></div>
 
     <div class="glass-layer" :style="{ paddingTop: 'env(safe-area-inset-top, 0px)' }">
-      <div class="flex flex-col w-full px-5 pt-8 pb-5">
+      <div class="main-slot flex flex-col w-full">
         <slot />
       </div>
     </div>
@@ -13,66 +13,71 @@
 </template>
 
 <script setup lang="ts">
-import { useThemeStore } from "~/stores/theme";
-const themeStore = useThemeStore();
+import { useUIStore } from "~/stores/ui";
+const themeStore = useUIStore();
 
 onMounted(() => themeStore.initTheme());
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .container-bg {
   position: fixed;
   inset: 0;
   z-index: -2;
   background-color: #ffffff;
-}
 
-.layer {
-  position: absolute;
-  inset: 0;
-  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
+  .layer {
+    position: absolute;
+    inset: 0;
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
-/* --- LIGHT MODE SETUP --- */
-.light-layer {
-  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-  opacity: 1;
-  z-index: -2;
-  overflow: hidden;
-}
+  /* --- LIGHT MODE SETUP --- */
+  .light-layer {
+    background: linear-gradient(135deg, #e2e8f0 0%, #f5f5f5 100%);
+    opacity: 1;
+    z-index: -2;
+    overflow: hidden;
+  }
 
-/* --- DARK MODE SETUP --- */
-.dark-layer {
-  background: #0f172a;
-  opacity: 0;
-  z-index: -1;
-}
+  /* --- DARK MODE SETUP --- */
+  .dark-layer {
+    background: #0f172a;
+    opacity: 0;
+    z-index: -1;
+  }
 
-/* Efek Vignette di sekeliling layar */
-.dark-layer::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    circle at center,
-    rgba(15, 23, 42, 0) 0%,
-    rgba(2, 6, 23, 0.7) 100%
-  );
+  /* Efek Vignette di sekeliling layar */
+  .dark-layer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at center,
+      rgba(15, 23, 42, 0) 0%,
+      rgba(2, 6, 23, 0.7) 100%
+    );
+  }
+
+  .dark-layer.active-layer {
+    opacity: 1;
+  }
+
+  .glass-layer {
+    width: 100%;
+    min-height: 100dvh;
+    transition: all 0.8s ease;
+
+    .main-slot {
+      height: 100vh;
+      max-height: 100dvh;
+    }
+  }
 }
 
 /* --- TRANSITION LOGIC --- */
 .hidden-layer {
   opacity: 0;
-}
-
-.dark-layer.active-layer {
-  opacity: 1;
-}
-
-.glass-layer {
-  width: 100%;
-  min-height: 100dvh;
-  transition: all 0.8s ease;
 }
 
 /* Glass effect saat Dark Mode */

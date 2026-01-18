@@ -25,6 +25,8 @@ export const useAuthStore = defineStore("auth", {
     },
 
     logout() {
+      console.log('1');
+
       this.user = null;
       this.token = null;
       this.isLoggedIn = false;
