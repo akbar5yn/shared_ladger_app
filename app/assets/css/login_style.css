@@ -24,32 +24,11 @@
     }
 }
 
-.auth-content input::placeholder {
-    color: #666;
-}
-
-.auth-content {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding: 20px 30px;
-    border-radius: 20px;
-
-
-    background: rgba(23, 30, 43, 0.219);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.452);
-    box-shadow:
-        0 -25px 50px -12px rgba(36, 43, 49, 0.329),
-        inset 0 0 0 1px rgba(202, 2, 2, 0.05);
-}
-
 .field-container {
     background: rgba(255, 255, 255, 1);
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 10px;
-    padding: 0px 10px;
+    padding: 5px 10px;
 }
 
 
@@ -67,20 +46,20 @@
 
 .border-animasi-wrapper {
     position: relative;
-    padding: 0 3px;
+    padding: 0 4px;
 }
 
 .border-animasi-wrapper::after {
     content: "";
     position: absolute;
-    background: conic-gradient(from var(--angle), #17afb0, #4dd0e1, #17afb0);
+    background: conic-gradient(from var(--angle), #ffaf02, #e1b24d, #efae23);
     z-index: -1;
     width: 100%;
     top: 50%;
     left: 50%;
     translate: -50% -50%;
     border-radius: 12px;
-    padding: 22px;
+    padding: 28px;
     opacity: 0;
     transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
 }
@@ -88,7 +67,7 @@
 .border-animasi-wrapper::before {
     content: "";
     position: absolute;
-    background: conic-gradient(from var(--angle), #17afb0, #4dd0e1, #17afb0);
+    background: conic-gradient(from var(--angle), #ffaf02, #e1b24d, #efae23);
     inset: -1px;
     z-index: -1;
     border-radius: 30px;
@@ -120,7 +99,7 @@
     position: relative;
     background-color: white;
     border-radius: 12px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #505050;
     height: 100%;
     width: 100%;
     display: flex;
@@ -184,18 +163,6 @@
     opacity: 0.6;
 }
 
-/* NOTE Login btn style */
-/* .login-btn .loading{
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 3px solid rgba(255, 255, 255, 0.6);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-right: 8px;
-    vertical-align: middle;
-} */
 .login-btn .loading {
     position: relative;
     display: flex;

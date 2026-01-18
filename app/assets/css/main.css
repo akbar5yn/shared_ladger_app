@@ -9,6 +9,23 @@
     font-display: swap;
 }
 
+:root {
+    --safe-top: env(safe-area-inset-top, 0px);
+}
+
+#app {
+    padding-top: var(--safe-top);
+}
+
+.fixed-safe-top {
+    top: calc(var(--safe-top) + 1.25rem) !important;
+}
+
 body {
     font-family: 'Gabarito', sans-serif;
+}
+
+.light-mode-font {
+    color: white;
+    transition: all 0.8s ease;
 }

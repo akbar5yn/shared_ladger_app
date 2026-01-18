@@ -1,14 +1,14 @@
-import { useNotificationStore } from "~/stores/notification"
+import { useNotificationStore, type TNotification } from "~/stores/notification"
 
 export const useNotifier = () => {
     const notifierStore = useNotificationStore()
 
-    const notifySuccess = (message: string) => {
-        notifierStore.show(message)
+    const notifySuccess = (message: string, type: TNotification) => {
+        notifierStore.show(message, 5000, type)
     }
 
-    const notifyError = (message: string) => {
-        notifierStore.show(`Error: ${message}`, 5000)
+    const notifyError = (message: string, type: TNotification) => {
+        notifierStore.show(`Error: ${message}`, 5000, type)
     }
 
     return {

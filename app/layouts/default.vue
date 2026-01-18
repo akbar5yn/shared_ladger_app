@@ -1,19 +1,84 @@
 <template>
-  <div class="container relative">
-    <div class="flex flex-col w-full px-5 pt-8 pb-5">
-      <slot />
+  <div class="container-bg">
+    <div class="layer light-layer" :class="{ 'hidden-layer': themeStore.isDark }"></div>
+
+    <div class="layer dark-layer" :class="{ 'active-layer': themeStore.isDark }"></div>
+
+    <div class="glass-layer" :style="{ paddingTop: 'env(safe-area-inset-top, 0px)' }">
+      <div class="flex flex-col w-full px-5 pt-8 pb-5">
+        <slot />
+      </div>
     </div>
   </div>
 </template>
 
+<script setup lang="ts">
+import { useThemeStore } from "~/stores/theme";
+const themeStore = useThemeStore();
+
+onMounted(() => themeStore.initTheme());
+</script>
+
 <style scoped>
-.container {
-  background-image: url("/icons/background.png");
+.container-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-color: #ffffff;
+  /* Fallback */
+}
+
+.layer {
   position: absolute;
-  top: 0;
-  left: 0;
-  background-size: cover;
-  height: 100%;
+  inset: 0;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- LIGHT MODE SETUP --- */
+.light-layer {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  opacity: 1;
+  z-index: -2;
+  overflow: hidden;
+}
+
+/* --- DARK MODE SETUP --- */
+.dark-layer {
+  background: #0f172a;
+  opacity: 0;
+  z-index: -1;
+}
+
+/* Efek Vignette di sekeliling layar */
+.dark-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(15, 23, 42, 0) 0%,
+    rgba(2, 6, 23, 0.7) 100%
+  );
+}
+
+/* --- TRANSITION LOGIC --- */
+.hidden-layer {
+  opacity: 0;
+}
+
+.dark-layer.active-layer {
+  opacity: 1;
+}
+
+.glass-layer {
   width: 100%;
+  min-height: 100dvh;
+  transition: all 0.8s ease;
+}
+
+/* Glass effect saat Dark Mode */
+.active-layer ~ .glass-layer {
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(6px);
 }
 </style>

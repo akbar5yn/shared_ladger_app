@@ -9,6 +9,10 @@ const APP_SHORT_NAME = isDev
 const APP_DESCRIPTION = process.env.NUXT_PUBLIC_APP_NAME_DESCRIPTION || 'this is my idea app for shared ledger';
 
 export default defineNuxtConfig({
+  ssr: false,
+  image: {
+    provider: 'none',
+  },
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   app: {
