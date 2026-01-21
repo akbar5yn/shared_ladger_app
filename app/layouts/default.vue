@@ -24,7 +24,6 @@ onMounted(() => themeStore.initTheme());
   position: fixed;
   inset: 0;
   z-index: -2;
-  background-color: #ffffff;
 
   .layer {
     position: absolute;
@@ -34,7 +33,7 @@ onMounted(() => themeStore.initTheme());
 
   /* --- LIGHT MODE SETUP --- */
   .light-layer {
-    background: linear-gradient(135deg, #e2e8f0 0%, #f5f5f5 100%);
+    background-color: #fafafa;
     opacity: 1;
     z-index: -2;
     overflow: hidden;

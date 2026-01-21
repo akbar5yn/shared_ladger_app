@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import type { IUser, ILoginResponse } from "~/types/IUser";
+import { Preferences } from '@capacitor/preferences'
 
 interface ICredentials {
   email: string;
@@ -11,22 +12,49 @@ export const useAuthStore = defineStore("auth", {
     user: null as IUser | null,
     token: null as string | null,
     isLoggedIn: false,
+    hydrated: false
   }),
   getters: {
     userInfo: (state) => state.user,
   },
   actions: {
-    setLoginAction(data: ILoginResponse) {
+    async setLoginAction(data: ILoginResponse) {
       if (data) {
         this.user = data.user
         this.token = data.token
         this.isLoggedIn = true
+
+        await Preferences.set({
+          key: 'auth_token',
+          value: data.token
+        })
       }
     },
 
-    logout() {
-      console.log('1');
+    async restoreSession() {
+      await appLog('[AUTH] restoreSession start')
 
+      const { value } = await Preferences.get({ key: 'auth_token' })
+
+      await appLog('[AUTH] token = ' + (value ? 'FOUND' : 'EMPTY'))
+
+      if (!value) {
+        return await appLog('because token is empty so hydrate is false')
+      }
+      if (value) {
+        this.token = value
+        this.isLoggedIn = true
+      }
+
+      this.hydrated = true
+      await appLog('[AUTH] hydrated = true')
+    },
+
+    async logout() {
+
+      await Preferences.remove({ key: 'auth_token' })
+      document.cookie = 'auth_session=; Max-Age=0; path=/;'
+      this.hydrated = false
       this.user = null;
       this.token = null;
       this.isLoggedIn = false;
@@ -38,6 +66,7 @@ export const useAuthStore = defineStore("auth", {
       path: "/",
       sameSite: "lax",
     }),
+    pick: ['user', 'token', 'isLoggedIn'],
     key: 'auth_session'
   },
 });

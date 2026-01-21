@@ -49,7 +49,7 @@ export const useAuth = () => {
         }
 
         if (res.success) {
-            authStore.setLoginAction(res.data)
+            await authStore.setLoginAction(res.data)
             await router.push('/dashboard')
             await nextTick()
             setTimeout(() => {
