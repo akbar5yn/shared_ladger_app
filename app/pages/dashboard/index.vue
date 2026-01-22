@@ -21,6 +21,20 @@ import SpendingCard from "~/components/dashboard/SpendingCard.vue";
 import ModalLogout from "~/components/ui/modals/ModalLogout.vue";
 import ToastModal from "~/components/ui/modals/ToastModal.vue";
 definePageMeta({ middleware: ["auth"], layout: "default" });
+
+interface MyBankEvent extends Event {
+  data: {
+    title: string;
+    text: string;
+    pkg: string;
+  };
+}
+onMounted(() => {
+  window.addEventListener("onBankNotification", ((event: MyBankEvent) => {
+    const { title, text, pkg } = event.data;
+    console.log("DATA NYAMPE:", title, text, pkg);
+  }) as EventListener);
+});
 </script>
 
 <style scoped></style>
