@@ -5,17 +5,36 @@ import android.service.notification.StatusBarNotification
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.webkit.WebView
+import com.example.app.MainActivity
 
 class AppNotificationListener : NotificationListenerService() {
-
-    override fun onListenerConnected() {
-        super.onListenerConnected()
-        Log.d("APP_NOTIF", "KOTLIN LISTENER CONNECTED")
+    // 1. Biar kurir "nempel" terus di memori (Auto-Restart)
+    override fun onStartCommand(intent: android.content.Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
+        return START_STICKY 
     }
 
+    // 2. Log buat mantau di logcat apakah izin sudah On
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        Log.d("APP_NOTIF", "✅ Kurir Aktif: Listener Berhasil Terhubung!")
+    }
+
+    // 3. Log kalau izin dicabut atau service terputus
+    override fun onListenerDisconnected() {
+        super.onListenerDisconnected()
+        Log.d("APP_NOTIF", "⚠️ Kurir Mati: Listener Terputus!")
+    }
+
+    // 4. Nyalain lagi kalau user nge-swipe aplikasi (Recent Apps)
+    override fun onTaskRemoved(rootIntent: android.content.Intent?) {
+        val restartServiceIntent = android.content.Intent(applicationContext, this.javaClass)
+        restartServiceIntent.setPackage(packageName)
+        startService(restartServiceIntent)
+        super.onTaskRemoved(rootIntent)
+    }
+    
     private var lastText: String = ""
-    private var lastPackage: String = ""
     private var lastTime: Long = 0
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
@@ -25,49 +44,25 @@ class AppNotificationListener : NotificationListenerService() {
         val pkg = sbn.packageName
         val currentTime = System.currentTimeMillis()
 
-        if (text == lastText && pkg == lastPackage && (currentTime - lastTime) < 2000) {
-            return 
-        }
-
-        val appsPenting = listOf("com.whatsapp", "com.instagram.android", "com.android.bank")
+        if (text == lastText && (currentTime - lastTime) < 1000) return
 
         lastText = text
-        lastPackage = pkg
         lastTime = currentTime
-
-        if (pkg.contains("spotify") || pkg.contains("google.android.music")) {
-            return 
-        }
-
-        Log.d("APP_NOTIF", "--- NOTIF MASUK (FILTERED) ---")
-        Log.d("APP_NOTIF", "Dari: $pkg | Isi: $text")
-
 
         Handler(Looper.getMainLooper()).post {
             try {
-                val bridge = MainActivity.instance?.bridge
-                val webView = bridge?.webView
-
-                if (webView != null) {
+                MainActivity.instance?.bridge?.webView?.let { webView ->
                     val jsCode = """
                         (function() {
                             var ev = new Event('onBankNotification');
-                            ev.data = { 
-                                title: "$title", 
-                                text: "$text", 
-                                pkg: "$pkg" 
-                            };
+                            ev.data = { title: "$title", text: "$text", pkg: "$pkg" };
                             window.dispatchEvent(ev);
                         })();
                     """.trimIndent()
-                    
                     webView.evaluateJavascript(jsCode, null)
-                    Log.d("APP_NOTIF", "Data berhasil dikirim ke Nuxt!")
-                } else {
-                    Log.e("APP_NOTIF", "WebView belum siap / App lagi gak dibuka")
                 }
             } catch (e: Exception) {
-                Log.e("APP_NOTIF", "Error kirim ke JS: ${e.message}")
+                Log.e("APP_NOTIF", "Error: ${e.message}")
             }
         }
     }

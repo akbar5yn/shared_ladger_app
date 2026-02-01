@@ -20,20 +20,18 @@ import Drawer from "~/components/dashboard/Drawer.vue";
 import SpendingCard from "~/components/dashboard/SpendingCard.vue";
 import ModalLogout from "~/components/ui/modals/ModalLogout.vue";
 import ToastModal from "~/components/ui/modals/ToastModal.vue";
+import { useBankObserver } from "~/composables/useBankObserver";
+import { useTransactionStore } from "~/stores/useTransactionStore";
+
 definePageMeta({ middleware: ["auth"], layout: "default" });
 
-interface MyBankEvent extends Event {
-  data: {
-    title: string;
-    text: string;
-    pkg: string;
-  };
-}
-onMounted(() => {
-  window.addEventListener("onBankNotification", ((event: MyBankEvent) => {
-    const { title, text, pkg } = event.data;
-    console.log("DATA NYAMPE:", title, text, pkg);
-  }) as EventListener);
+const transactionStore = useTransactionStore();
+
+const { handleComeTransaction } = useBankObserver();
+
+onMounted(async () => {
+  handleComeTransaction();
+  await transactionStore.rehydrate();
 });
 </script>
 

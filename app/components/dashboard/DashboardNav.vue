@@ -1,6 +1,9 @@
 <template>
-  <section class="navigation-wrapper">
-    <div class="nav-container flex justify-center overflow-x-auto pb-4 no-scrollbar">
+  <section id="navigation-wrapper" class="navigation-wrapper">
+    <div
+      id="nav-container"
+      class="nav-container flex justify-center overflow-x-auto pb-4 no-scrollbar"
+    >
       <div
         v-for="menu in menus"
         :key="menu.name"

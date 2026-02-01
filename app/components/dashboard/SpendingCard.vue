@@ -1,7 +1,8 @@
 <template>
   <div class="card-wrapper">
     <div
-      class="card-container relative w-full rounded-3xl px-6 py-5 border transition-all duration-700"
+      id="spending-container"
+      class="card-container relative w-full rounded-3xl px-6 py-5 border transition-all duration-700 h-[500px]"
       :class="
         ui.isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100 shadow-sm'
       "
@@ -76,7 +77,7 @@ import { useUIStore } from "~/stores/ui";
 const ui = useUIStore();
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .card-wrapper {
   /* Hilangkan padding default agar ukuran dikontrol parent */
   padding: 0 15px;

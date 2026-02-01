@@ -2,11 +2,6 @@ import { defineStore } from "pinia";
 import type { IUser, ILoginResponse } from "~/types/IUser";
 import { Preferences } from '@capacitor/preferences'
 
-interface ICredentials {
-  email: string;
-  password: string;
-}
-
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     user: null as IUser | null,

@@ -1,4 +1,4 @@
-export type TNotification = 'success' | 'error' | 'info'
+import { type TNotification } from "~/types/INotification"
 
 export const useNotificationStore = defineStore('notification', {
     state: () => ({
@@ -20,5 +20,5 @@ export const useNotificationStore = defineStore('notification', {
                 this.message = ''
             }, duration)
         },
-    }
+    },
 })
