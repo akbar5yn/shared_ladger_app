@@ -18,6 +18,7 @@ export const useAuthStore = defineStore("auth", {
         this.user = data.user
         this.token = data.token
         this.isLoggedIn = true
+        this.hydrated = true
 
         await Preferences.set({
           key: 'auth_token',
@@ -34,6 +35,9 @@ export const useAuthStore = defineStore("auth", {
       await appLog('[AUTH] token = ' + (value ? 'FOUND' : 'EMPTY'))
 
       if (!value) {
+        this.token = null;
+        this.isLoggedIn = false;
+        this.hydrated = true;
         return await appLog('because token is empty so hydrate is false')
       }
       if (value) {

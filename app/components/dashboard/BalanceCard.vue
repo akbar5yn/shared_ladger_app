@@ -38,7 +38,7 @@
             class="text-xl font-bold transition-colors duration-700"
             :class="ui.isDark ? 'text-white' : 'text-slate-900'"
           >
-            Rp 500.000
+            {{ transactionStore.formatIDR(transactionStore.remainingBalance) }}
           </p>
         </div>
 
@@ -53,7 +53,7 @@
             class="text-xl font-bold transition-colors duration-700"
             :class="ui.isDark ? 'text-amber-500' : 'text-slate-900'"
           >
-            Rp 50.000
+            {{ transactionStore.formatIDR(transactionStore.totalExpenses) }}
           </p>
         </div>
       </div>
@@ -63,7 +63,9 @@
 
 <script setup lang="ts">
 import { useUIStore } from "~/stores/ui";
+import { useTransactionStore } from "~/stores/useTransactionStore";
 const ui = useUIStore();
+const transactionStore = useTransactionStore();
 </script>
 
 <style lang="scss" scoped>

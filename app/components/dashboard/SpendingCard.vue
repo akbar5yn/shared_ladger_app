@@ -20,52 +20,48 @@
             class="text-2xl font-bold tracking-tight"
             :class="ui.isDark ? 'text-white' : 'text-slate-900'"
           >
-            Rp 12.521.100
+            {{ transactionStore.formatIDR(transactionStore.totalExpenses) }}
           </h1>
           <span :class="ui.isDark ? 'text-slate-500' : 'text-gray-400'" class="text-xs">
-            From Rp 20.000.000
+            From {{ transactionStore.formatIDR(transactionStore.monthlyBudget) }}
           </span>
         </div>
 
-        <div class="flex h-3 w-full gap-1.5 overflow-hidden rounded-full">
+        <div
+          v-if="transactionStore.totalExpenses > 0"
+          class="flex h-3 w-full gap-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
+        >
           <div
-            class="h-full rounded-full transition-all duration-1000"
-            style="width: 60%"
-            :class="ui.isDark ? 'bg-amber-500' : 'bg-slate-900'"
-          ></div>
-          <div class="h-full w-[25%] rounded-full bg-teal-500"></div>
-          <div
-            class="h-full flex-1 rounded-full"
-            :class="ui.isDark ? 'bg-slate-800' : 'bg-blue-100'"
+            v-for="(cat, index) in transactionStore.activeCategories"
+            :key="index"
+            class="h-full transition-all duration-1000"
+            :style="{ width: `${transactionStore.getCategoryPercentage(cat)}%` }"
+            :class="getCategoryColor(cat)"
           ></div>
         </div>
 
-        <div class="flex flex-col gap-3 mt-2">
-          <div class="flex justify-between items-center text-sm">
+        <div
+          v-if="transactionStore.activeCategories.length > 0"
+          class="flex flex-col gap-3 mt-2"
+        >
+          <div
+            v-for="cat in transactionStore.activeCategories"
+            :key="cat"
+            class="flex justify-between items-center text-sm animate-fade-in"
+          >
             <div class="flex items-center gap-3">
-              <div
-                class="w-2 h-2 rounded-full"
-                :class="ui.isDark ? 'bg-amber-500' : 'bg-slate-900'"
-              ></div>
-              <span :class="ui.isDark ? 'text-slate-300' : 'text-gray-600'"
-                >Subscription</span
-              >
+              <div class="w-2 h-2 rounded-full" :class="getCategoryColor(cat)"></div>
+              <span :class="ui.isDark ? 'text-slate-300' : 'text-gray-600'">{{
+                cat
+              }}</span>
             </div>
-            <span class="font-bold" :class="ui.isDark ? 'text-white' : 'text-slate-900'"
-              >Rp 8.221.000</span
-            >
+            <span class="font-bold" :class="ui.isDark ? 'text-white' : 'text-slate-900'">
+              {{ transactionStore.formatIDR(transactionStore.getCategoryTotal(cat)) }}
+            </span>
           </div>
-          <div class="flex justify-between items-center text-sm">
-            <div class="flex items-center gap-3">
-              <div class="w-2 h-2 rounded-full bg-teal-500"></div>
-              <span :class="ui.isDark ? 'text-slate-300' : 'text-gray-600'"
-                >Friend & Family</span
-              >
-            </div>
-            <span class="font-bold" :class="ui.isDark ? 'text-white' : 'text-slate-900'"
-              >Rp 4.300.100</span
-            >
-          </div>
+        </div>
+        <div v-else class="py-4 text-center text-xs italic text-slate-500">
+          Belum ada transaksi terkonfirmasi bulan ini.
         </div>
       </div>
     </div>
@@ -74,7 +70,24 @@
 
 <script setup lang="ts">
 import { useUIStore } from "~/stores/ui";
+import { useTransactionStore } from "~/stores/useTransactionStore";
+const transactionStore = useTransactionStore();
 const ui = useUIStore();
+
+const getCategoryColor = (category: string): string => {
+  const colors: Record<string, string> = {
+    "Makan/Minum": "bg-amber-500",
+    Belanja: "bg-teal-500",
+    Jajan: "bg-rose-500",
+    "Cicilan/Tagihan": "bg-blue-500",
+    Tabungan: "bg-indigo-500",
+    "Kirim Orang Tua": "bg-emerald-500",
+    "Gaji/Income": "bg-green-500",
+  };
+
+  // Fallback kalau kategori nggak ketemu
+  return colors[category] || "bg-slate-400";
+};
 </script>
 
 <style scoped lang="scss">

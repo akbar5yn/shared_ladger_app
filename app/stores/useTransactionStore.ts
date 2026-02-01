@@ -1,5 +1,4 @@
-import { Preferences } from "@capacitor/preferences";
-import type { IRecentTransaction } from "~/types/INotification";
+import type { IRecentTransaction, TTransactionCategory } from "~/types/INotification";
 
 const extractNominal = (text: string): number => {
     const match = text.match(/Rp(\d{1,3}(?:\.\d{3})*)/)
@@ -12,9 +11,65 @@ const extractNominal = (text: string): number => {
 
 export const useTransactionStore = defineStore('transaction', {
     state: () => ({
+        monthlyBudget: 5000000,
+        actualBalance: 5000000,
         history: [] as IRecentTransaction[],
         pendingTransactions: [] as IRecentTransaction[]
     }),
+
+    getters: {
+        totalExpenses: (state) => {
+            return state.history
+                .filter(t => t.type === 'expense')
+                .reduce((acc, curr) => acc + curr.amount, 0);
+        },
+
+        remainingBalance(): number {
+            return this.actualBalance - this.totalExpenses;
+        },
+
+        spendingPercentage(): number {
+            return (this.totalExpenses / this.monthlyBudget) * 100;
+        },
+
+        formatIDR: () => (val: number): string => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency', currency: 'IDR', minimumFractionDigits: 0
+            }).format(val);
+        },
+
+        activeCategories(state): TTransactionCategory[] {
+            const categories = state.history
+                .filter(t => t.type === 'expense')
+                .map(t => t.category as TTransactionCategory);
+
+            return [...new Set(categories.filter(Boolean))];
+        },
+
+        getCategoryTotal: (state) => (category: TTransactionCategory): number => {
+            return state.history
+                .filter(t => t.category === category && t.type === 'expense')
+                .reduce((acc, curr) => acc + curr.amount, 0);
+        },
+
+        getCategoryPercentage: (state) => (category: TTransactionCategory): number => {
+            const total = state.history
+                .filter(t => t.type === 'expense')
+                .reduce((acc, curr) => acc + curr.amount, 0);
+
+            if (total === 0) return 0;
+
+            const categoryTotal = state.history
+                .filter(t => t.category === category && t.type === 'expense')
+                .reduce((acc, curr) => acc + curr.amount, 0);
+
+            return (categoryTotal / total) * 100;
+        },
+
+        formattedTotalExpenses(): string {
+            return this.formatIDR(this.totalExpenses);
+        }
+    },
 
     actions: {
         async rehydrate() {
@@ -78,7 +133,7 @@ export const useTransactionStore = defineStore('transaction', {
             this.saveToDisk()
         },
 
-        confirmTransaction(id: string | number, category: string, finalType: 'income' | 'expense') {
+        confirmTransaction(id: string | number, category: TTransactionCategory, finalType: 'income' | 'expense') {
             const index = this.pendingTransactions.findIndex(t => t.id === id)
 
             if (index !== -1) {
@@ -97,6 +152,7 @@ export const useTransactionStore = defineStore('transaction', {
                     const confirmedData: IRecentTransaction = {
                         id: item.id,
                         title: category,
+                        category: category,
                         text: item.text,
                         icon: iconMap[category] || 'i-heroicons-hashtag',
                         date: item.date,

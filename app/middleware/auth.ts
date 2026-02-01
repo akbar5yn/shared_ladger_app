@@ -1,16 +1,17 @@
 import { useAuthStore } from "~/stores/auth"
 
-export default defineNuxtRouteMiddleware(() => {
+export default defineNuxtRouteMiddleware(async (to, from) => {
     const auth = useAuthStore()
 
-    appLog(
-        `[MW] check token=${!!auth.token} hydrated=${auth.hydrated}`
-    )
-
-    if (!auth.hydrated) return
+    if (!auth.hydrated) {
+        await auth.restoreSession()
+    }
 
     if (!auth.token) {
-        appLog('[MW] redirect to /auth')
-        return navigateTo('/auth')
+        appLog('[MW] No token found, redirecting to /auth')
+
+        if (to.path !== '/auth') {
+            return navigateTo('/auth')
+        }
     }
 })

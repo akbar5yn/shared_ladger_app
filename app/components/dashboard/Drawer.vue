@@ -125,11 +125,7 @@
               <template v-if="item.metadata === 'INCOME_AUTO'">
                 <button
                   @click="
-                    transactionStore.confirmTransaction(
-                      item.id,
-                      'Gaji / Income',
-                      'income'
-                    )
+                    transactionStore.confirmTransaction(item.id, 'Gaji/Income', 'income')
                   "
                   class="flex-1 py-2 rounded-lg bg-emerald-500/10 text-emerald-600 text-[10px] font-bold active:scale-95"
                 >
@@ -150,17 +146,36 @@
                   @click="
                     transactionStore.confirmTransaction(item.id, 'Makan/Minum', 'expense')
                   "
-                  class="flex-1 py-2 rounded-lg bg-orange-500/10 text-orange-600 text-[10px] font-bold active:scale-95"
+                  class="flex-1 py-2 rounded-lg bg-orange-500/10 text-orange-600 text-[10px] font-bold active:scale-95 transition-all"
                 >
                   🍔 Makan
                 </button>
+
+                <button
+                  @click="
+                    transactionStore.confirmTransaction(item.id, 'Jajan', 'expense')
+                  "
+                  class="flex-1 py-2 rounded-lg bg-rose-500/10 text-rose-600 text-[10px] font-bold active:scale-95 transition-all"
+                >
+                  ☕ Jajan
+                </button>
+
                 <button
                   @click="
                     transactionStore.confirmTransaction(item.id, 'Belanja', 'expense')
                   "
-                  class="flex-1 py-2 rounded-lg bg-amber-500/10 text-amber-600 text-[10px] font-bold active:scale-95"
+                  class="flex-1 py-2 rounded-lg bg-amber-500/10 text-amber-600 text-[10px] font-bold active:scale-95 transition-all"
                 >
                   🛒 Belanja
+                </button>
+
+                <button
+                  @click="
+                    transactionStore.confirmTransaction(item.id, 'Lainnya', 'expense')
+                  "
+                  class="flex-1 py-2 rounded-lg bg-slate-500/10 text-slate-600 text-[10px] font-bold active:scale-95 transition-all"
+                >
+                  📦 Lainnya
                 </button>
               </template>
 
@@ -194,7 +209,7 @@
               <template v-else>
                 <button
                   @click="
-                    transactionStore.confirmTransaction(item.id, 'Nabung', 'income')
+                    transactionStore.confirmTransaction(item.id, 'Tabungan', 'income')
                   "
                   class="flex-1 py-2 rounded-lg bg-emerald-500/10 text-emerald-600 text-[10px] font-bold active:scale-95"
                 >
@@ -278,12 +293,14 @@ onMounted(() => {
     let safeZone = h - 100;
 
     if (navWrapper) {
-      safeZone = Math.floor(navWrapper.getBoundingClientRect().top);
+      const bottomInset = 16;
+      const drawerHandleHeight = cursorGrab?.getBoundingClientRect().height ?? 0;
+
+      safeZone = window.innerHeight - drawerHandleHeight - bottomInset;
     }
 
     if (spendingEl) {
       const spendingBottom = Math.floor(spendingEl.getBoundingClientRect().bottom + 20);
-      let spendingHeight = spendingBottom;
 
       limits.max = spendingBottom > safeZone ? safeZone : spendingBottom;
 
