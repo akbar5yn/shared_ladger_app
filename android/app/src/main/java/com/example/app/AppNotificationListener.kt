@@ -1,34 +1,31 @@
 package com.example.app
 
+import android.content.Intent
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import com.example.app.MainActivity
 
 class AppNotificationListener : NotificationListenerService() {
-    // 1. Biar kurir "nempel" terus di memori (Auto-Restart)
-    override fun onStartCommand(intent: android.content.Intent?, flags: Int, startId: Int): Int {
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         return START_STICKY 
     }
 
-    // 2. Log buat mantau di logcat apakah izin sudah On
     override fun onListenerConnected() {
         super.onListenerConnected()
         Log.d("APP_NOTIF", "✅ Kurir Aktif: Listener Berhasil Terhubung!")
     }
 
-    // 3. Log kalau izin dicabut atau service terputus
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
         Log.d("APP_NOTIF", "⚠️ Kurir Mati: Listener Terputus!")
     }
 
-    // 4. Nyalain lagi kalau user nge-swipe aplikasi (Recent Apps)
-    override fun onTaskRemoved(rootIntent: android.content.Intent?) {
-        val restartServiceIntent = android.content.Intent(applicationContext, this.javaClass)
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        val restartServiceIntent = Intent(applicationContext, this.javaClass)
         restartServiceIntent.setPackage(packageName)
         startService(restartServiceIntent)
         super.onTaskRemoved(rootIntent)
@@ -44,25 +41,24 @@ class AppNotificationListener : NotificationListenerService() {
         val pkg = sbn.packageName
         val currentTime = System.currentTimeMillis()
 
+        // Debounce: Cegah double notif dalam 1 detik
         if (text == lastText && (currentTime - lastTime) < 1000) return
 
         lastText = text
         lastTime = currentTime
 
+        // KIRIM VIA BROADCAST (Lebih Stabil)
         Handler(Looper.getMainLooper()).post {
             try {
-                MainActivity.instance?.bridge?.webView?.let { webView ->
-                    val jsCode = """
-                        (function() {
-                            var ev = new Event('onBankNotification');
-                            ev.data = { title: "$title", text: "$text", pkg: "$pkg" };
-                            window.dispatchEvent(ev);
-                        })();
-                    """.trimIndent()
-                    webView.evaluateJavascript(jsCode, null)
-                }
+                val intent = Intent("com.example.app.NOTIFICATION_RECEIVED")
+                intent.putExtra("title", title)
+                intent.putExtra("text", text)
+                intent.putExtra("pkg", pkg)
+                
+                sendBroadcast(intent)
+                Log.d("APP_NOTIF", "🚀 Broadcast Terkirim ke WebView: $title")
             } catch (e: Exception) {
-                Log.e("APP_NOTIF", "Error: ${e.message}")
+                Log.e("APP_NOTIF", "❌ Error kirim broadcast: ${e.message}")
             }
         }
     }
