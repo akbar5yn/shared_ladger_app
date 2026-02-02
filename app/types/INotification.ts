@@ -6,7 +6,8 @@ export type TTransactionCategory =
     | 'Gaji/Income'
     | 'Tabungan'
     | 'Cicilan/Tagihan'
-    | 'Kirim Orang Tua'
+    | 'Transfer'
+    | 'Investasi'
     | 'Jajan'
     | 'Lainnya';
 

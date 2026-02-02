@@ -1,4 +1,4 @@
-import type { IRecentTransaction, TTransactionCategory } from "~/types/INotification";
+import type { IRecentTransaction, TTransactionCategory, TTransactionMetadata } from "~/types/INotification";
 
 const extractNominal = (text: string): number => {
     const match = text.match(/Rp(\d{1,3}(?:\.\d{3})*)/)
@@ -11,13 +11,19 @@ const extractNominal = (text: string): number => {
 
 export const useTransactionStore = defineStore('transaction', {
     state: () => ({
-        monthlyBudget: 5000000,
-        actualBalance: 5000000,
+        monthlyBudget: 0,
+        actualBalance: 0,
         history: [] as IRecentTransaction[],
         pendingTransactions: [] as IRecentTransaction[]
     }),
 
     getters: {
+        totalIncomes: (state) => {
+            return state.history
+                .filter(t => t.type === 'income')
+                .reduce((acc, curr) => acc + curr.amount, 0);
+        },
+
         totalExpenses: (state) => {
             return state.history
                 .filter(t => t.type === 'expense')
@@ -25,10 +31,11 @@ export const useTransactionStore = defineStore('transaction', {
         },
 
         remainingBalance(): number {
-            return this.actualBalance - this.totalExpenses;
+            return (this.actualBalance + this.totalIncomes) - this.totalExpenses;
         },
 
         spendingPercentage(): number {
+            console.log('budget', this.monthlyBudget);
             return (this.totalExpenses / this.monthlyBudget) * 100;
         },
 
@@ -36,6 +43,14 @@ export const useTransactionStore = defineStore('transaction', {
             return new Intl.NumberFormat('id-ID', {
                 style: 'currency', currency: 'IDR', minimumFractionDigits: 0
             }).format(val);
+        },
+
+        activeIncomeCategories(state): TTransactionCategory[] {
+            const categories = state.history
+                .filter(t => t.type === 'income')
+                .map(t => t.category as TTransactionCategory);
+
+            return [...new Set(categories.filter(Boolean))];
         },
 
         activeCategories(state): TTransactionCategory[] {
@@ -46,10 +61,24 @@ export const useTransactionStore = defineStore('transaction', {
             return [...new Set(categories.filter(Boolean))];
         },
 
-        getCategoryTotal: (state) => (category: TTransactionCategory): number => {
+        getCategoryTotal: (state) => (category: TTransactionCategory, type: 'income' | 'expense' = 'expense'): number => {
             return state.history
-                .filter(t => t.category === category && t.type === 'expense')
+                .filter(t => t.category === category && t.type === type)
                 .reduce((acc, curr) => acc + curr.amount, 0);
+        },
+
+        getIncomeCategoryPercentage: (state) => (category: TTransactionCategory): number => {
+            const total = state.history
+                .filter(t => t.type === 'income')
+                .reduce((acc, curr) => acc + curr.amount, 0);
+
+            if (total === 0) return 0;
+
+            const categoryTotal = state.history
+                .filter(t => t.category === category && t.type === 'income')
+                .reduce((acc, curr) => acc + curr.amount, 0);
+
+            return (categoryTotal / total) * 100;
         },
 
         getCategoryPercentage: (state) => (category: TTransactionCategory): number => {
@@ -85,7 +114,9 @@ export const useTransactionStore = defineStore('transaction', {
                 const { $capStorage } = useNuxtApp()
                 const dataToSave = JSON.stringify({
                     history: this.history,
-                    pendingTransactions: this.pendingTransactions
+                    pendingTransactions: this.pendingTransactions,
+                    monthlyBudget: this.monthlyBudget,
+                    actualBalance: this.actualBalance
                 })
                 await ($capStorage as any).setItem('transaction_store', dataToSave)
             } catch (e) {
@@ -107,7 +138,7 @@ export const useTransactionStore = defineStore('transaction', {
             const lowerTitle = title.toLowerCase()
             const lowerText = text.toLowerCase()
 
-            let categoryType: 'INCOME_AUTO' | 'QRIS_AUTO' | 'TRANSFER_MANUAL' | 'UNCLEAR' = 'UNCLEAR'
+            let categoryType: TTransactionMetadata = 'UNCLEAR'
 
             if (lowerTitle.includes('uang masuk') || lowerText.includes('transfer masuk')) {
                 categoryType = 'INCOME_AUTO'
@@ -117,12 +148,19 @@ export const useTransactionStore = defineStore('transaction', {
                 categoryType = 'TRANSFER_MANUAL'
             }
 
+            const metadataIconMap: Record<string, string> = {
+                'INCOME_AUTO': 'i-heroicons-arrow-down-circle',
+                'QRIS_AUTO': 'i-heroicons-qr-code',
+                'TRANSFER_MANUAL': 'i-heroicons-paper-airplane',
+                'UNCLEAR': 'i-heroicons-question-mark-circle'
+            }
+
             const newEntry: IRecentTransaction = {
                 id: `tr-${Date.now()}`,
                 title: title,
                 text: text,
                 amount: amount,
-                icon: categoryType === 'INCOME_AUTO' ? 'i-heroicons-arrow-down-left' : 'i-heroicons-arrow-up-right',
+                icon: metadataIconMap[categoryType] || 'i-heroicons-bell',
                 type: categoryType === 'INCOME_AUTO' ? 'income' : 'expense',
                 date: new Date().toLocaleDateString('id-ID'),
                 time: new Date().toLocaleTimeString('id-ID'),
@@ -142,11 +180,13 @@ export const useTransactionStore = defineStore('transaction', {
                     const iconMap: Record<string, string> = {
                         'Makan/Minum': 'i-heroicons-utensils',
                         'Belanja': 'i-heroicons-shopping-bag',
-                        'Gaji / Income': 'i-heroicons-banknotes',
+                        'Gaji/Income': 'i-heroicons-banknotes',
                         'Tabungan': 'i-heroicons-building-library',
-                        'Kirim Orang Tua': 'i-heroicons-heart',
-                        'Cicilan/Tagihan': 'i-heroicons-document-text',
-                        'Jajan': 'i-heroicons-ticket'
+                        'Cicilan/Tagihan': 'i-heroicons-credit-card',
+                        'Transfer': 'i-heroicons-paper-airplane',
+                        'Investasi': 'i-heroicons-chart-bar-square',
+                        'Jajan': 'i-heroicons-ticket',
+                        'Lainnya': 'i-heroicons-ellipsis-horizontal-circle'
                     }
 
                     const confirmedData: IRecentTransaction = {
@@ -166,6 +206,11 @@ export const useTransactionStore = defineStore('transaction', {
                 this.pendingTransactions.splice(index, 1)
                 this.saveToDisk()
             }
+        },
+
+        setBudget(amount: number) {
+            this.monthlyBudget = amount;
+            this.saveToDisk();
         },
 
         async removePending(id: string | number) {

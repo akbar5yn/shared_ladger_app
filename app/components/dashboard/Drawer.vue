@@ -1,15 +1,18 @@
 <template>
   <section
-    class="fixed inset-x-0 bottom-0 rounded-t-[40px] shadow-[0_-20px_50px_rgba(0,0,0,0.2)] flex flex-col overflow-hidden"
+    class="fixed inset-x-0 bottom-0 rounded-t-[40px] shadow-[0_-20px_50px_rgba(0,0,0,0.2)] flex flex-col overflow-hidden transition-all"
     :style="{
-      top: `${currentTop}px`,
+      top: isMounted ? `${currentTop}px` : '100vh',
       zIndex: 100,
       transform: `translateZ(0)`,
       transition: isDragging
         ? 'none'
-        : 'top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1), background-color 0.7s ease, border-color 0.7s ease, color 0.7s ease',
+        : 'top 0.8s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.7s ease, border-color 0.7s ease',
     }"
-    :class="[ui.isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900']"
+    :class="[
+      ui.isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900',
+      isMounted ? 'opacity-100' : 'opacity-0',
+    ]"
   >
     <div
       id="cursor-grab"
@@ -122,112 +125,24 @@
             <div
               class="flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-slate-700"
             >
-              <template v-if="item.metadata === 'INCOME_AUTO'">
-                <button
-                  @click="
-                    transactionStore.confirmTransaction(item.id, 'Gaji/Income', 'income')
-                  "
-                  class="flex-1 py-2 rounded-lg bg-emerald-500/10 text-emerald-600 text-[10px] font-bold active:scale-95"
-                >
-                  💰 Gaji
-                </button>
-                <button
-                  @click="
-                    transactionStore.confirmTransaction(item.id, 'Tabungan', 'income')
-                  "
-                  class="flex-1 py-2 rounded-lg bg-blue-500/10 text-blue-600 text-[10px] font-bold active:scale-95"
-                >
-                  🏦 Nabung
-                </button>
-              </template>
-
-              <template v-else-if="item.metadata === 'QRIS_AUTO'">
-                <button
-                  @click="
-                    transactionStore.confirmTransaction(item.id, 'Makan/Minum', 'expense')
-                  "
-                  class="flex-1 py-2 rounded-lg bg-orange-500/10 text-orange-600 text-[10px] font-bold active:scale-95 transition-all"
-                >
-                  🍔 Makan
-                </button>
-
-                <button
-                  @click="
-                    transactionStore.confirmTransaction(item.id, 'Jajan', 'expense')
-                  "
-                  class="flex-1 py-2 rounded-lg bg-rose-500/10 text-rose-600 text-[10px] font-bold active:scale-95 transition-all"
-                >
-                  ☕ Jajan
-                </button>
-
-                <button
-                  @click="
-                    transactionStore.confirmTransaction(item.id, 'Belanja', 'expense')
-                  "
-                  class="flex-1 py-2 rounded-lg bg-amber-500/10 text-amber-600 text-[10px] font-bold active:scale-95 transition-all"
-                >
-                  🛒 Belanja
-                </button>
-
-                <button
-                  @click="
-                    transactionStore.confirmTransaction(item.id, 'Lainnya', 'expense')
-                  "
-                  class="flex-1 py-2 rounded-lg bg-slate-500/10 text-slate-600 text-[10px] font-bold active:scale-95 transition-all"
-                >
-                  📦 Lainnya
-                </button>
-              </template>
-
-              <template v-else-if="item.metadata === 'TRANSFER_MANUAL'">
-                <button
-                  @click="
-                    transactionStore.confirmTransaction(
-                      item.id,
-                      'Kirim Orang Tua',
-                      'expense'
-                    )
-                  "
-                  class="flex-1 py-2 rounded-lg bg-purple-500/10 text-purple-600 text-[10px] font-bold active:scale-95"
-                >
-                  👨‍👩‍👧 Ortu
-                </button>
-                <button
-                  @click="
-                    transactionStore.confirmTransaction(
-                      item.id,
-                      'Cicilan/Tagihan',
-                      'expense'
-                    )
-                  "
-                  class="flex-1 py-2 rounded-lg bg-red-500/10 text-red-600 text-[10px] font-bold active:scale-95"
-                >
-                  🧾 Tagihan
-                </button>
-              </template>
-
-              <template v-else>
-                <button
-                  @click="
-                    transactionStore.confirmTransaction(item.id, 'Tabungan', 'income')
-                  "
-                  class="flex-1 py-2 rounded-lg bg-emerald-500/10 text-emerald-600 text-[10px] font-bold active:scale-95"
-                >
-                  Nabung
-                </button>
-                <button
-                  @click="
-                    transactionStore.confirmTransaction(item.id, 'Jajan', 'expense')
-                  "
-                  class="flex-1 py-2 rounded-lg bg-amber-500/10 text-amber-600 text-[10px] font-bold active:scale-95"
-                >
-                  Jajan
-                </button>
-              </template>
-
+              <button
+                v-for="opt in getOptions(item.metadata || 'DEFAULT')"
+                :key="opt.value"
+                @click="transactionStore.confirmTransaction(item.id, (opt.value as TTransactionCategory), opt.type)"
+                :class="opt.color(ui.isDark)"
+                class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg font-bold text-[10px] active:scale-95 transition-all shadow-sm"
+              >
+                <UIcon v-if="opt.icon" :name="opt.icon" class="text-xs shrink-0" />
+                <span>{{ opt.label }}</span>
+              </button>
               <button
                 @click="transactionStore.removePending(item.id)"
-                class="w-9 py-2 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-400 active:scale-95"
+                class="w-9 py-2 flex items-center justify-center rounded-lg active:scale-95"
+                :class="
+                  ui.isDark
+                    ? 'bg-gray-300 text-slate-900'
+                    : 'dark:bg-slate-700 text-gray-400'
+                "
               >
                 <UIcon name="i-heroicons-trash" />
               </button>
@@ -268,14 +183,139 @@
 <script setup lang="ts">
 import { useUIStore } from "~/stores/ui";
 import { useTransactionStore } from "~/stores/useTransactionStore";
+import type { TTransactionCategory } from "~/types/INotification";
 const transactionStore = useTransactionStore();
 const ui = useUIStore();
 const currentTop = ref(500);
 const isDragging = ref(false);
+const isMounted = ref(false);
 let isSpendingLocked = false;
 const startY = ref(0);
 const startTop = ref(0);
 const limits = reactive({ min: 80, max: 500 });
+
+interface ICategoryOption {
+  label: string;
+  icon?: string;
+  value: TTransactionCategory;
+  type: "income" | "expense";
+  color: (isDark: boolean) => string;
+}
+
+const categoryOptions: Record<string, ICategoryOption[]> = {
+  INCOME_AUTO: [
+    {
+      label: "Gaji",
+      icon: "i-heroicons-banknotes",
+      value: "Gaji/Income",
+      type: "income",
+      color: (isDark) =>
+        isDark
+          ? "bg-emerald-500/20 text-emerald-400"
+          : "bg-emerald-500/10 text-emerald-600",
+    },
+    {
+      label: "Nabung",
+      icon: "i-heroicons-building-library",
+      value: "Tabungan",
+      type: "income",
+      color: (isDark) =>
+        isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-500/10 text-blue-600",
+    },
+    {
+      label: "Lainnya",
+      icon: "i-heroicons-ellipsis-horizontal-circle",
+      value: "Lainnya",
+      type: "income",
+      color: (isDark) =>
+        isDark ? "bg-slate-500/20 text-slate-400" : "bg-slate-500/10 text-slate-600",
+    },
+  ],
+  QRIS_AUTO: [
+    {
+      label: "Makan",
+      icon: "i-heroicons-cake",
+      value: "Makan/Minum",
+      type: "expense",
+      color: (isDark) =>
+        isDark ? "bg-amber-200 text-black" : "bg-amber-200/40 text-amber-600",
+    },
+    {
+      label: "Jajan",
+      icon: "i-heroicons-ticket",
+      value: "Jajan",
+      type: "expense",
+      color: (isDark) =>
+        isDark ? "bg-amber-500 text-black" : "bg-amber-500/30 text-amber-600",
+    },
+    {
+      label: "Belanja",
+      icon: "i-heroicons-shopping-bag",
+      value: "Belanja",
+      type: "expense",
+      color: (isDark) =>
+        isDark ? "bg-teal-500 text-black" : "bg-teal-500/10 text-teal-600",
+    },
+    {
+      label: "Lainnya",
+      icon: "i-heroicons-ellipsis-horizontal-circle",
+      value: "Lainnya",
+      type: "expense",
+      color: (isDark) =>
+        isDark ? "bg-slate-500/20 text-slate-400" : "bg-slate-500/10 text-slate-600",
+    },
+  ],
+  TRANSFER_MANUAL: [
+    {
+      label: "Transfer",
+      icon: "i-heroicons-paper-airplane",
+      value: "Transfer",
+      type: "expense",
+      color: (isDark) =>
+        isDark ? "bg-emerald-500 text-black" : "bg-emerald-300/30 text-emerald-600",
+    },
+    {
+      label: "Tagihan",
+      icon: "i-heroicons-credit-card",
+      value: "Cicilan/Tagihan",
+      type: "expense",
+      color: (isDark) =>
+        isDark ? "bg-red-400 text-black" : "bg-red-400/20 text-red-600",
+    },
+    {
+      label: "Invest",
+      icon: "i-heroicons-chart-bar-square",
+      value: "Investasi",
+      type: "expense",
+      color: (isDark) =>
+        isDark ? "bg-indigo-500 text-black" : "bg-indigo-500/20 text-indigo-600",
+    },
+    {
+      label: "Lainnya",
+      icon: "i-heroicons-ellipsis-horizontal-circle",
+      value: "Lainnya",
+      type: "expense",
+      color: (isDark) =>
+        isDark ? "bg-slate-500/20 text-slate-400" : "bg-slate-500/10 text-slate-600",
+    },
+  ],
+  DEFAULT: [
+    {
+      label: "Lainnya",
+      icon: "i-heroicons-ellipsis-horizontal-circle",
+      value: "Lainnya",
+      type: "expense",
+      color: (isDark) =>
+        isDark ? "bg-slate-700 text-slate-300" : "bg-slate-500/10 text-slate-600",
+    },
+  ],
+};
+
+const getOptions = (metadata: string) => {
+  return (
+    categoryOptions[metadata as keyof typeof categoryOptions] || categoryOptions.DEFAULT
+  );
+};
 
 onMounted(() => {
   const updatePositions = () => {
@@ -345,7 +385,8 @@ onMounted(() => {
 
   setTimeout(() => {
     updatePositions();
-  }, 100);
+    isMounted.value = true;
+  }, 500);
 
   onUnmounted(() => {
     resizeObserver.disconnect();
