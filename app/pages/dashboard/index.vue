@@ -34,14 +34,20 @@ import { useTransactionStore } from "~/stores/useTransactionStore";
 definePageMeta({ middleware: ["auth"], layout: "default" });
 
 const transactionStore = useTransactionStore();
-const { handleComeTransaction } = useBankObserver();
+const { handleComeTransaction, checkPendingData } = useBankObserver();
 
 const isLoading = ref(true);
 
 onMounted(async () => {
   try {
-    handleComeTransaction();
     await transactionStore.rehydrate();
+    handleComeTransaction();
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        console.log("Welcome back! Checking warehouse...");
+        checkPendingData();
+      }
+    });
   } finally {
     setTimeout(() => {
       isLoading.value = false;

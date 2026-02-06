@@ -1,3 +1,4 @@
+import { loadESLint } from "eslint";
 import type { IRecentTransaction, TTransactionCategory, TTransactionMetadata } from "~/types/INotification";
 
 const extractNominal = (text: string): number => {
@@ -35,7 +36,6 @@ export const useTransactionStore = defineStore('transaction', {
         },
 
         spendingPercentage(): number {
-            console.log('budget', this.monthlyBudget);
             return (this.totalExpenses / this.monthlyBudget) * 100;
         },
 
@@ -123,26 +123,36 @@ export const useTransactionStore = defineStore('transaction', {
                 console.error("❌ Gagal simpan ke disk:", e)
             }
         },
-        addTransaction(payload: { title: string, text: string, pkg: string }) {
-            const amount = extractNominal(payload.text)
-            const { title, text, pkg } = payload
+        async addTransaction(payload: { title: string, text: string, pkg: string, timestamp?: number }) {
+            const { title, text, pkg, timestamp } = payload
 
-            const isAladin = pkg.toLowerCase().includes('aladin')
-            const isInstagram = pkg.toLowerCase().includes('instagram')
+            const nativeId = timestamp || Date.now()
 
-            if (!isAladin && !isInstagram) {
-                console.log(`🚫 Notif dari ${pkg} diabaikan (Bukan Aladin/IG)`)
+            const isDuplicate = this.pendingTransactions.some(t => {
+                const sameText = t.text === text;
+                const isWithinTolerance = Math.abs((t.nativeId || 0) - nativeId) < 5000;
+                return sameText && isWithinTolerance;
+            }) || this.history.some(t => t.text === text && Math.abs((t.nativeId || 0) - nativeId) < 5000);
+
+            if (isDuplicate) {
                 return
             }
 
+            const isAladin = pkg.toLowerCase().includes('aladin')
+
+            if (!isAladin) {
+                return
+            }
+
+            const amount = extractNominal(text)
             const lowerTitle = title.toLowerCase()
             const lowerText = text.toLowerCase()
 
             let categoryType: TTransactionMetadata = 'UNCLEAR'
 
-            if (lowerTitle.includes('uang masuk') || lowerText.includes('transfer masuk')) {
+            if (lowerTitle.includes('transaksi uang masuk') || lowerText.includes('uang masuk berhasil') || lowerText.includes('transfer masuk')) {
                 categoryType = 'INCOME_AUTO'
-            } else if (lowerTitle.includes('qris')) {
+            } else if (lowerTitle.includes('qris') || lowerTitle.includes('transaksi qris')) {
                 categoryType = 'QRIS_AUTO'
             } else if (lowerText.includes('transfer berhasil') || lowerText.includes('dana') && lowerText.includes('terkirim')) {
                 categoryType = 'TRANSFER_MANUAL'
@@ -157,18 +167,19 @@ export const useTransactionStore = defineStore('transaction', {
 
             const newEntry: IRecentTransaction = {
                 id: `tr-${Date.now()}`,
+                nativeId: nativeId,
                 title: title,
                 text: text,
                 amount: amount,
                 icon: metadataIconMap[categoryType] || 'i-heroicons-bell',
                 type: categoryType === 'INCOME_AUTO' ? 'income' : 'expense',
-                date: new Date().toLocaleDateString('id-ID'),
-                time: new Date().toLocaleTimeString('id-ID'),
+                date: new Date(nativeId).toLocaleDateString('id-ID'),
+                time: new Date(nativeId).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
                 metadata: categoryType
             }
 
             this.pendingTransactions.unshift(newEntry)
-            this.saveToDisk()
+            await this.saveToDisk()
         },
 
         confirmTransaction(id: string | number, category: TTransactionCategory, finalType: 'income' | 'expense') {
@@ -191,6 +202,7 @@ export const useTransactionStore = defineStore('transaction', {
 
                     const confirmedData: IRecentTransaction = {
                         id: item.id,
+                        nativeId: item.nativeId,
                         title: category,
                         category: category,
                         text: item.text,
@@ -217,7 +229,7 @@ export const useTransactionStore = defineStore('transaction', {
             const index = this.pendingTransactions.findIndex(t => t.id === id)
             if (index !== -1) {
                 this.pendingTransactions.splice(index, 1)
-                await this.saveToDisk() // Jangan lupa simpan perubahan
+                await this.saveToDisk()
             }
         }
     }

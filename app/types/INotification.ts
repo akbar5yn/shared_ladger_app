@@ -20,6 +20,7 @@ export interface MyBankEvent extends Event {
 }
 
 export interface IRecentTransaction {
+    nativeId: number;
     id: number | string
     title: string
     text: string
