@@ -1,4 +1,3 @@
-import { loadESLint } from "eslint";
 import type { IRecentTransaction, TTransactionCategory, TTransactionMetadata } from "~/types/INotification";
 
 const extractNominal = (text: string): number => {
@@ -139,8 +138,9 @@ export const useTransactionStore = defineStore('transaction', {
             }
 
             const isAladin = pkg.toLowerCase().includes('aladin')
+            const isBca = pkg.toLowerCase().includes('com.bca') || pkg.toLowerCase().includes('bca')
 
-            if (!isAladin) {
+            if (!isAladin && !isBca) {
                 return
             }
 
@@ -150,11 +150,24 @@ export const useTransactionStore = defineStore('transaction', {
 
             let categoryType: TTransactionMetadata = 'UNCLEAR'
 
-            if (lowerTitle.includes('transaksi uang masuk') || lowerText.includes('uang masuk berhasil') || lowerText.includes('transfer masuk')) {
+            if (
+                lowerTitle.includes('transaksi uang masuk') ||
+                lowerTitle.includes('BCA mobile') ||
+                lowerText.includes('uang masuk berhasil') ||
+                lowerText.includes('dana masuk') ||
+                lowerText.includes('melalui layanan BI-Fast') ||
+                lowerText.includes('transfer masuk')
+            ) {
                 categoryType = 'INCOME_AUTO'
-            } else if (lowerTitle.includes('qris') || lowerTitle.includes('transaksi qris')) {
+            } else if (
+                lowerTitle.includes('qris') ||
+                lowerTitle.includes('transaksi qris')
+            ) {
                 categoryType = 'QRIS_AUTO'
-            } else if (lowerText.includes('transfer berhasil') || lowerText.includes('dana') && lowerText.includes('terkirim')) {
+            } else if (
+                lowerText.includes('transfer berhasil') ||
+                lowerText.includes('dana') && lowerText.includes('terkirim')
+            ) {
                 categoryType = 'TRANSFER_MANUAL'
             }
 
@@ -218,6 +231,11 @@ export const useTransactionStore = defineStore('transaction', {
                 this.pendingTransactions.splice(index, 1)
                 this.saveToDisk()
             }
+        },
+
+        addManualIncome(amount: number) {
+            this.actualBalance += amount;
+            this.saveToDisk();
         },
 
         setBudget(amount: number) {

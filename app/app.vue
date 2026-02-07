@@ -1,10 +1,10 @@
 <template>
-  <div>
+  <UApp>
     <VitePwaManifest />
     <ClientOnly>
       <NuxtLayout>
         <NuxtPage />
       </NuxtLayout>
     </ClientOnly>
-  </div>
+  </UApp>
 </template>

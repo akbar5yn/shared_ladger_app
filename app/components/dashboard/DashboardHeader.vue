@@ -14,8 +14,10 @@
         </div>
       </ClientOnly>
       <div class="flex flex-col gap-0 justify-center">
-        <span class="day" :class="[{ 'font-light': isDark }]">Good Morning,</span>
-        <span class="username" :class="[{ 'font-light': isDark }]">{{
+        <span class="day text-slate-900" :class="[{ 'font-light': isDark }]"
+          >Good Morning,</span
+        >
+        <span class="username text-slate-900" :class="[{ 'font-light': isDark }]">{{
           userInfo?.name
         }}</span>
       </div>
