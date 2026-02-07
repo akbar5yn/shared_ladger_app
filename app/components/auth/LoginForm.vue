@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-10 text-base mt-10">
+  <div class="flex flex-col gap-4 text-base mt-10">
     <section class="text-black">
       <h1 class="text-[30px] text-center font-bold">Shared Ledger</h1>
       <p class="text-center text-[13px] mt-2 text-gray-500">

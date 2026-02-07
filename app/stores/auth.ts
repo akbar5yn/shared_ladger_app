@@ -5,6 +5,7 @@ import { Preferences } from '@capacitor/preferences'
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     user: null as IUser | null,
+    isGuest: false,
     token: null as string | null,
     isLoggedIn: false,
     hydrated: false
@@ -24,25 +25,42 @@ export const useAuthStore = defineStore("auth", {
           key: 'auth_token',
           value: data.token
         })
+        await Preferences.set({ key: 'is_guest', value: 'false' })
       }
+    },
+
+    async setGuestMode(status: boolean) {
+      this.isGuest = status;
+      this.isLoggedIn = false;
+      this.token = null;
+      this.hydrated = true;
+
+      await Preferences.set({
+        key: 'is_guest',
+        value: status.toString()
+      });
+      await Preferences.remove({ key: 'auth_token' });
     },
 
     async restoreSession() {
       await appLog('[AUTH] restoreSession start')
 
       const { value } = await Preferences.get({ key: 'auth_token' })
+      const { value: guestStatus } = await Preferences.get({ key: 'is_guest' })
 
       await appLog('[AUTH] token = ' + (value ? 'FOUND' : 'EMPTY'))
+      await appLog('[AUTH] isGuest = ' + guestStatus)
 
       if (!value) {
         this.token = null;
         this.isLoggedIn = false;
         this.hydrated = true;
-        return await appLog('because token is empty so hydrate is false')
+        return await appLog('Token empty, isGuest: ' + this.isGuest)
       }
       if (value) {
         this.token = value
         this.isLoggedIn = true
+        this.isGuest = false
       }
 
       this.hydrated = true
@@ -52,6 +70,7 @@ export const useAuthStore = defineStore("auth", {
     async logout() {
 
       await Preferences.remove({ key: 'auth_token' })
+      await Preferences.remove({ key: 'is_guest' })
       document.cookie = 'auth_session=; Max-Age=0; path=/;'
       this.hydrated = false
       this.user = null;
@@ -65,7 +84,7 @@ export const useAuthStore = defineStore("auth", {
       path: "/",
       sameSite: "lax",
     }),
-    pick: ['user', 'token', 'isLoggedIn'],
+    pick: ['user', 'token', 'isLoggedIn', 'isGuest'],
     key: 'auth_session'
   },
 });

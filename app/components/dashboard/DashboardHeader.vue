@@ -18,7 +18,7 @@
           >Good Morning,</span
         >
         <span class="username text-slate-900" :class="[{ 'font-light': isDark }]">{{
-          userInfo?.name
+          userInfo?.name ?? "Guest Mode"
         }}</span>
       </div>
     </div>

@@ -7,10 +7,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         await auth.restoreSession()
     }
 
-    if (!auth.token) {
-        appLog('[MW] No token found, redirecting to /auth')
-
-        if (to.path !== '/auth') {
+    if (!auth.token && !auth.isGuest) {
+        if (to.path !== '/auth' && !to.path.startsWith('/auth')) {
             return navigateTo('/auth')
         }
     }

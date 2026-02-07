@@ -28,7 +28,6 @@ import Drawer from "~/components/dashboard/Drawer.vue";
 import OverviewCard from "~/components/dashboard/OverviewCard.vue";
 import ModalLogout from "~/components/ui/modals/ModalLogout.vue";
 import ToastModal from "~/components/ui/modals/ToastModal.vue";
-import { useBankObserver } from "~/composables/useBankObserver";
 import { useTransactionStore } from "~/stores/useTransactionStore";
 
 definePageMeta({ middleware: ["auth"], layout: "default" });
