@@ -16,8 +16,12 @@
   ],
   
   "compilerOptions": {
+    "noEmit": true,           
+    "allowJs": true,
+    "checkJs": false,
+    "strict": true,
     "paths": {
       "~/*": ["./*"],
     }
-  }
+  },
 }
