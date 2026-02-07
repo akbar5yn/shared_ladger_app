@@ -13,21 +13,41 @@
         <div class="border-animasi-wrapper w-full">
           <div class="flex items-center gap-1 field-container">
             <UIcon name="i-heroicons-envelope" class="h-5 w-5 text-gray-500 shrink-0" />
-            <input id="email" type="text" v-model="formEmail" class="w-full text-sm" autocomplete="off"
-              placeholder="Masukan alamat email anda" />
+            <input
+              id="email"
+              type="text"
+              v-model="formEmail"
+              class="w-full text-sm"
+              autocomplete="off"
+              placeholder="Masukan alamat email anda"
+            />
           </div>
         </div>
-        <label for="password" class="text-[13px] font-medium px-[5px] mt-2">Password</label>
+        <label for="password" class="text-[13px] font-medium px-[5px] mt-2"
+          >Password</label
+        >
         <div class="border-animasi-wrapper w-full">
           <div class="flex items-center gap-1 field-container">
-            <UIcon name="i-heroicons-lock-closed" class="h-5 w-5 text-gray-500 shrink-0" />
-            <input type="password" v-model="formPassword" id="password" class="w-full text-sm" autocomplete="off"
-              placeholder="Masukan kata sandi anda" />
+            <UIcon
+              name="i-heroicons-lock-closed"
+              class="h-5 w-5 text-gray-500 shrink-0"
+            />
+            <input
+              type="password"
+              v-model="formPassword"
+              id="password"
+              class="w-full text-sm"
+              autocomplete="off"
+              placeholder="Masukan kata sandi anda"
+            />
           </div>
         </div>
-        <button :disabled="isLoading" type="submit"
+        <button
+          :disabled="isLoading"
+          type="submit"
           class="bg-[#f9ab26] py-2 mt-4 text-black rounded-[10px] font-bold login-btn border border-black transition-all duration-300"
-          :class="{ 'bg-[#f9ac267a] text-gray-500': isLoading }">
+          :class="{ 'bg-[#f9ac267a] text-gray-500': isLoading }"
+        >
           <span v-if="isLoading" class="loading">Loading</span>
           <span v-else>Sign in</span>
         </button>

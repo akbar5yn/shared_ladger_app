@@ -5,8 +5,13 @@
       <NuxtImg src="/icons/ic_auth.svg" class="savings" alt="savings" />
     </ClientOnly>
   </div>
-  <LoginForm v-model:email="userLogin.email" v-model:password="userLogin.password" :is-loading="isLoading"
-    @submit="submitLogin" @toggle-mode="isLogin = false" />
+  <LoginForm
+    v-model:email="userLogin.email"
+    v-model:password="userLogin.password"
+    :is-loading="isLoading"
+    @submit="submitLogin"
+    @toggle-mode="isLogin = false"
+  />
   <ToastModal />
 </template>
 

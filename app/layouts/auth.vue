@@ -25,7 +25,7 @@ onMounted(() => themeStore.initTheme());
   align-items: center;
   width: 100%;
   padding: 70px 30px;
-  background-color: f1f5f9;
+  background-color: #f1f5f9;
   height: 100vh;
 }
 
@@ -42,7 +42,7 @@ onMounted(() => themeStore.initTheme());
     rgb(255, 255, 255) 50%
   );
   opacity: 1;
-  z-index: -2;
+  z-index: 0;
   overflow: hidden;
 }
 
@@ -60,6 +60,7 @@ onMounted(() => themeStore.initTheme());
 }
 
 .main-wrapper {
+  z-index: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;

@@ -1,6 +1,7 @@
 @import "tailwindcss";
-@import "./_typography.css";
 @import "@nuxt/ui";
+@import "./_typography.css";
+@import "./login_style.css";
 
 @font-face {
     font-family: "Gabarito";
