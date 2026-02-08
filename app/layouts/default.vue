@@ -8,14 +8,15 @@
       <div class="main-slot flex flex-col w-full">
         <slot />
       </div>
+      <Drawer />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import Drawer from "~/components/dashboard/Drawer.vue";
 import { useUIStore } from "~/stores/ui";
 const themeStore = useUIStore();
-
 onMounted(() => themeStore.initTheme());
 </script>
 

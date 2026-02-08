@@ -58,7 +58,7 @@ const menus = [
   { name: "Home", icon: "i-heroicons-home", path: "/dashboard" }, // Tambah path
   { name: "Bills", icon: "i-heroicons-document-text", path: "/dashboard/bills" },
   { name: "Send", icon: "i-heroicons-paper-airplane", path: "/dashboard/send" },
-  { name: "History", icon: "i-heroicons-clock", path: "/dashboard/history" },
+  { name: "History", icon: "i-heroicons-clock", path: "/history" },
   { name: "Logout", icon: "i-heroicons-arrow-right-on-rectangle", path: "" },
 ];
 

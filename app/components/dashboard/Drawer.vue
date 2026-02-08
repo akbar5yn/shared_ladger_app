@@ -193,6 +193,7 @@ let isSpendingLocked = false;
 const startY = ref(0);
 const startTop = ref(0);
 const limits = reactive({ min: 80, max: 500 });
+const route = useRoute();
 
 interface ICategoryOption {
   label: string;
@@ -316,69 +317,121 @@ const getOptions = (metadata: string) => {
     categoryOptions[metadata as keyof typeof categoryOptions] || categoryOptions.DEFAULT
   );
 };
+const updatePositions = () => {
+  const h = window.innerHeight;
+  const headerEl = document.getElementById("main-header");
+  const spendingEl = document.getElementById("main-slot");
+  const navWrapper = document.getElementById("navigation-wrapper");
+  const spendingContainer = document.getElementById("spending-container");
+  const cursorGrab = document.getElementById("cursor-grab");
 
-onMounted(() => {
-  const updatePositions = () => {
-    const h = window.innerHeight;
-    const headerEl = document.getElementById("main-header");
-    const spendingEl = document.getElementById("spending-card");
-    const navWrapper = document.getElementById("navigation-wrapper");
-    const spendingContainer = document.getElementById("spending-container");
-    const cursorGrab = document.getElementById("cursor-grab");
+  if (headerEl) {
+    limits.min = headerEl.getBoundingClientRect().bottom + 10;
+  }
 
-    if (headerEl) {
-      limits.min = headerEl.getBoundingClientRect().bottom + 10;
-    }
+  let safeZone = h - 100;
 
-    let safeZone = h - 100;
+  if (navWrapper) {
+    const bottomInset = 16;
+    const drawerHandleHeight = cursorGrab?.getBoundingClientRect().height ?? 0;
 
-    if (navWrapper) {
-      const bottomInset = 16;
-      const drawerHandleHeight = cursorGrab?.getBoundingClientRect().height ?? 0;
+    safeZone = window.innerHeight - drawerHandleHeight - bottomInset;
+  }
 
-      safeZone = window.innerHeight - drawerHandleHeight - bottomInset;
-    }
+  if (spendingEl) {
+    const spendingBottom = Math.floor(spendingEl.getBoundingClientRect().bottom + 20);
 
-    if (spendingEl) {
-      const spendingBottom = Math.floor(spendingEl.getBoundingClientRect().bottom + 20);
+    limits.max = spendingBottom > safeZone ? safeZone : spendingBottom;
 
-      limits.max = spendingBottom > safeZone ? safeZone : spendingBottom;
+    if (spendingBottom && navWrapper && cursorGrab && spendingContainer) {
+      const navHeight = navWrapper.getBoundingClientRect().height;
+      const cursorGrabH = cursorGrab.getBoundingClientRect().height;
+      const stopTop = h - (navHeight + cursorGrabH);
 
-      if (spendingBottom && navWrapper && cursorGrab && spendingContainer) {
-        const navHeight = navWrapper.getBoundingClientRect().height;
-        const cursorGrabH = cursorGrab.getBoundingClientRect().height;
-        const stopTop = h - (navHeight + cursorGrabH);
+      if (spendingBottom >= stopTop) {
+        limits.max = stopTop;
 
-        if (spendingBottom >= stopTop) {
-          limits.max = stopTop;
+        if (!isSpendingLocked) {
+          const maxHeight = stopTop - spendingContainer.getBoundingClientRect().top - 20;
 
-          if (!isSpendingLocked) {
-            const maxHeight =
-              stopTop - spendingContainer.getBoundingClientRect().top - 20;
+          spendingContainer.style.maxHeight = `${maxHeight}px`;
+          spendingContainer.style.overflow = "scroll";
 
-            spendingContainer.style.maxHeight = `${maxHeight}px`;
-            spendingContainer.style.overflow = "scroll";
-
-            isSpendingLocked = true;
-          }
-        } else {
-          if (isSpendingLocked) {
-            spendingEl.style.maxHeight = "";
-            spendingEl.style.overflow = "";
-            isSpendingLocked = false;
-          }
+          isSpendingLocked = true;
+        }
+      } else {
+        if (isSpendingLocked) {
+          spendingEl.style.maxHeight = "";
+          spendingEl.style.overflow = "";
+          isSpendingLocked = false;
         }
       }
     }
+  }
 
-    currentTop.value = limits.max;
-  };
+  currentTop.value = limits.max;
+};
+onMounted(() => {
+  // const updatePositions = () => {
+  //   const h = window.innerHeight;
+  //   const headerEl = document.getElementById("main-header");
+  //   const spendingEl = document.getElementById("spending-card");
+  //   const navWrapper = document.getElementById("navigation-wrapper");
+  //   const spendingContainer = document.getElementById("spending-container");
+  //   const cursorGrab = document.getElementById("cursor-grab");
 
+  //   if (headerEl) {
+  //     limits.min = headerEl.getBoundingClientRect().bottom + 10;
+  //   }
+
+  //   let safeZone = h - 100;
+
+  //   if (navWrapper) {
+  //     const bottomInset = 16;
+  //     const drawerHandleHeight = cursorGrab?.getBoundingClientRect().height ?? 0;
+
+  //     safeZone = window.innerHeight - drawerHandleHeight - bottomInset;
+  //   }
+
+  //   if (spendingEl) {
+  //     const spendingBottom = Math.floor(spendingEl.getBoundingClientRect().bottom + 20);
+
+  //     limits.max = spendingBottom > safeZone ? safeZone : spendingBottom;
+
+  //     if (spendingBottom && navWrapper && cursorGrab && spendingContainer) {
+  //       const navHeight = navWrapper.getBoundingClientRect().height;
+  //       const cursorGrabH = cursorGrab.getBoundingClientRect().height;
+  //       const stopTop = h - (navHeight + cursorGrabH);
+
+  //       if (spendingBottom >= stopTop) {
+  //         limits.max = stopTop;
+
+  //         if (!isSpendingLocked) {
+  //           const maxHeight =
+  //             stopTop - spendingContainer.getBoundingClientRect().top - 20;
+
+  //           spendingContainer.style.maxHeight = `${maxHeight}px`;
+  //           spendingContainer.style.overflow = "scroll";
+
+  //           isSpendingLocked = true;
+  //         }
+  //       } else {
+  //         if (isSpendingLocked) {
+  //           spendingEl.style.maxHeight = "";
+  //           spendingEl.style.overflow = "";
+  //           isSpendingLocked = false;
+  //         }
+  //       }
+  //     }
+  //   }
+
+  //   currentTop.value = limits.max;
+  // };
   const resizeObserver = new ResizeObserver(() => {
     updatePositions();
   });
 
-  const spendingEl = document.getElementById("spending-card");
+  const spendingEl = document.getElementById("main-slot");
   if (spendingEl) {
     resizeObserver.observe(spendingEl);
   }
@@ -419,6 +472,19 @@ const onTouchEnd = () => {
   const mid = (limits.min + limits.max) / 2;
   currentTop.value = currentTop.value < mid ? limits.min : limits.max;
 };
+
+watch(
+  () => route.path,
+  async () => {
+    // Tunggu Vue kelar update DOM
+    await nextTick();
+
+    // Kasih napas buat transisi halaman (delay 500ms - 800ms)
+    setTimeout(() => {
+      updatePositions();
+    }, 1500);
+  }
+);
 </script>
 
 <style>

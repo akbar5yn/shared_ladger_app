@@ -72,61 +72,6 @@
         </div>
       </div>
     </div>
-
-    <div
-      class="rounded-t-[40px] border-t flex flex-col min-h-[400px]"
-      :class="ui.isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'"
-    >
-      <div class="pt-6 pb-3">
-        <div
-          class="w-16 h-1.5 rounded-full mx-auto animate-pulse"
-          :class="ui.isDark ? 'bg-slate-800' : 'bg-gray-200'"
-        ></div>
-        <div class="px-10 pt-6">
-          <div
-            class="h-7 w-36 animate-pulse rounded-lg"
-            :class="ui.isDark ? 'bg-slate-800' : 'bg-slate-200'"
-          ></div>
-        </div>
-      </div>
-
-      <div class="px-6 space-y-6 mt-4">
-        <div class="grid grid-cols-4 gap-4 mb-4">
-          <div
-            v-for="i in 4"
-            :key="i"
-            class="h-14 rounded-2xl animate-pulse"
-            :class="ui.isDark ? 'bg-slate-800/50' : 'bg-slate-50'"
-          ></div>
-        </div>
-
-        <div
-          v-for="i in 2"
-          :key="i"
-          class="p-4 rounded-3xl border space-y-4"
-          :class="ui.isDark ? 'border-slate-800' : 'border-gray-50'"
-        >
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3 flex-1">
-              <div
-                class="w-10 h-10 rounded-xl animate-pulse"
-                :class="ui.isDark ? 'bg-slate-800' : 'bg-slate-200'"
-              ></div>
-              <div class="flex-1 space-y-2">
-                <div
-                  class="h-4 w-40 animate-pulse rounded"
-                  :class="ui.isDark ? 'bg-slate-800' : 'bg-slate-200'"
-                ></div>
-                <div
-                  class="h-2 w-24 animate-pulse rounded"
-                  :class="ui.isDark ? 'bg-slate-800' : 'bg-slate-100'"
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 

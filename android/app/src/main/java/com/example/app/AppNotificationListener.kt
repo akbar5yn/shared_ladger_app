@@ -11,19 +11,12 @@ import android.os.PowerManager
 
 class AppNotificationListener : NotificationListenerService() {
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        super.onStartCommand(intent, flags, startId)
-        return START_STICKY 
-    }
-
-    override fun onListenerConnected() {
-        super.onListenerConnected()
-        
+    private fun showForegroundNotification() {
         val channelId = "notif_service"
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             val channel = android.app.NotificationChannel(channelId, "Kurir Service", android.app.NotificationManager.IMPORTANCE_LOW)
             val manager = getSystemService(android.app.NotificationManager::class.java)
-            manager.createNotificationChannel(channel)
+            manager?.createNotificationChannel(channel)
         }
 
         val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
@@ -35,27 +28,79 @@ class AppNotificationListener : NotificationListenerService() {
             .build()
 
         startForeground(1, notification)
-        
+    }
+    
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // super.onStartCommand(intent, flags, startId)
+        showForegroundNotification()
+        return START_STICKY 
+    }
+
+    private fun scanActiveNotifications() {
         try {
-            val currentNotifications = activeNotifications 
-            if (currentNotifications != null) {
-                for (sbn in currentNotifications) {
-                    val pkg = sbn.packageName
-                    if (pkg == packageName) continue 
+            activeNotifications?.forEach { sbn ->
+                val pkg = sbn.packageName
+                if (pkg == packageName) return@forEach 
 
-                    val extras = sbn.notification.extras
-                    val title = extras.getString("android.title") ?: ""
-                    val text = extras.getCharSequence("android.text")?.toString() ?: ""
-                    val postTime = sbn.postTime
+                val extras = sbn.notification.extras
+                val title = extras.getString("android.title") ?: ""
+                val text = extras.getCharSequence("android.text")?.toString() ?: ""
+                val postTime = sbn.postTime
 
-                    if (pkg.contains("aladin") || pkg.contains("instagram") || pkg.contains("android.bank")) {
-                        saveToGudang(title, text, pkg, postTime)
-                    }
+                if (pkg.contains("aladin") || pkg.contains("instagram") || pkg.contains("android.bank")) {
+                    saveToGudang(title, text, pkg, postTime)
                 }
             }
         } catch (e: Exception) {
             Log.e("APP_NOTIF", "❌ Gagal nyapu jagat: ${e.message}")
         }
+    }
+
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        showForegroundNotification()
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            scanActiveNotifications()
+        }, 1000)
+        
+        // val channelId = "notif_service"
+        // if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        //     val channel = android.app.NotificationChannel(channelId, "Kurir Service", android.app.NotificationManager.IMPORTANCE_LOW)
+        //     val manager = getSystemService(android.app.NotificationManager::class.java)
+        //     manager.createNotificationChannel(channel)
+        // }
+
+        // val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
+        //     .setContentTitle("Shared Ledger Aktif")
+        //     .setContentText("Sedang memantau notifikasi bank...")
+        //     .setSmallIcon(android.R.drawable.ic_dialog_info)
+        //     .setOngoing(true)
+        //     .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)
+        //     .build()
+
+        // startForeground(1, notification)
+        
+        // try {
+        //     val currentNotifications = activeNotifications 
+        //     if (currentNotifications != null) {
+        //         for (sbn in currentNotifications) {
+        //             val pkg = sbn.packageName
+        //             if (pkg == packageName) continue 
+
+        //             val extras = sbn.notification.extras
+        //             val title = extras.getString("android.title") ?: ""
+        //             val text = extras.getCharSequence("android.text")?.toString() ?: ""
+        //             val postTime = sbn.postTime
+
+        //             if (pkg.contains("aladin") || pkg.contains("instagram") || pkg.contains("android.bank")) {
+        //                 saveToGudang(title, text, pkg, postTime)
+        //             }
+        //         }
+        //     }
+        // } catch (e: Exception) {
+        //     Log.e("APP_NOTIF", "❌ Gagal nyapu jagat: ${e.message}")
+        // }
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {

@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-5">
     <DashboardHeader id="main-header" />
-    <main class="main-index flex flex-col gap-2">
+    <main id="main-slot" class="main-index flex flex-col gap-2">
       <ClientOnly>
         <Transition name="fade-layout" mode="out-in">
           <DashboardSkeleton v-if="isLoading" key="loading" />
@@ -9,7 +9,7 @@
           <div v-else key="content" class="flex flex-col gap-2">
             <BalanceCard id="balance-card" />
             <OverviewCard id="spending-card" />
-            <Drawer />
+            <!-- <Drawer /> -->
           </div>
         </Transition>
       </ClientOnly>
@@ -24,7 +24,6 @@
 
 <script setup lang="ts">
 import BalanceCard from "~/components/dashboard/BalanceCard.vue";
-import Drawer from "~/components/dashboard/Drawer.vue";
 import OverviewCard from "~/components/dashboard/OverviewCard.vue";
 import ModalLogout from "~/components/ui/modals/ModalLogout.vue";
 import ToastModal from "~/components/ui/modals/ToastModal.vue";
