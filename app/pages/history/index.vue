@@ -20,7 +20,7 @@
                 class="absolute -right-4 -top-4 w-24 h-24 bg-amber-400/20 rounded-full blur-2xl"
               ></div>
 
-              <div class="flex items-center justify-between relative z-10">
+              <div class="flex justify-between relative z-10">
                 <div class="space-y-1">
                   <p
                     class="text-[10px] font-medium opacity-60 uppercase tracking-[0.2em]"
@@ -73,9 +73,32 @@
                   ></div>
                 </div>
 
-                <p class="text-[9px] opacity-40 italic leading-none">
-                  *Perbandingan total pengeluaran terhadap actual current balance.
-                </p>
+                <div class="flex items-center justify-between">
+                  <p class="text-[9px] opacity-40 italic leading-none max-w-[60%]">
+                    *Perbandingan total pengeluaran terhadap actual current balance.
+                  </p>
+                  <button
+                    @click="handleImportAction"
+                    class="flex items-center justify-center gap-2 px-3 py-1 rounded-md transition-colors active:scale-95 border border-black"
+                    :class="
+                      ui.isDark
+                        ? ' border border-white'
+                        : 'bg-slate-100/10 text-slate-900'
+                    "
+                  >
+                    <UIcon
+                      name="i-heroicons-arrow-up-tray"
+                      class="text-[10px]"
+                      :class="ui.isDark ? ' text-white' : ' text-slate-900'"
+                    />
+                    <span
+                      class="text-[8px] font-bold text-black uppercase tracking-tight"
+                      :class="ui.isDark ? ' text-white' : ' text-slate-900'"
+                    >
+                      Import History
+                    </span>
+                  </button>
+                </div>
               </div>
             </section>
 
@@ -162,25 +185,44 @@
       </ClientOnly>
     </main>
 
-    <ToastModal />
-    <ModalLogout />
+    <ClientOnly>
+      <ModalImport />
+      <ModalLogout />
+      <ToastModal />
+    </ClientOnly>
   </div>
 </template>
 
 <script setup lang="ts">
-import { json } from "stream/consumers";
 import DashboardHeader from "~/components/dashboard/DashboardHeader.vue";
 import ModalLogout from "~/components/ui/modals/ModalLogout.vue";
 import ToastModal from "~/components/ui/modals/ToastModal.vue";
 import { useUIStore } from "~/stores/ui";
 import { useTransactionStore } from "~/stores/useTransactionStore";
 import type { IRecentTransaction } from "~/types/INotification";
+import { registerPlugin } from "@capacitor/core";
+import ModalImport from "~/components/ui/modals/ModalImport.vue";
 
 definePageMeta({ middleware: ["auth"], layout: "default" });
+
+interface NotificationStoragePlugin {
+  triggerImport(): Promise<void>;
+}
+const NotificationStorage = registerPlugin<NotificationStoragePlugin>(
+  "NotificationStorage"
+);
 
 const ui = useUIStore();
 const transactionStore = useTransactionStore();
 const isLoading = ref(true);
+
+const handleImportAction = async () => {
+  try {
+    await NotificationStorage.triggerImport();
+  } catch (e) {
+    alert("Gagal buka file picker");
+  }
+};
 
 const groupedHistory = computed(() => {
   const groups: Record<string, IRecentTransaction[]> = {};
@@ -211,8 +253,28 @@ const expenseRatio = computed(() => {
   return (expense / balance) * 100;
 });
 
+const handleImportEvent = (event: any) => {
+  try {
+    console.log("Nuxt: Data diterima dari Native", event.detail);
+
+    const rawString = event.detail.data;
+    if (!rawString) return;
+
+    const parsed = JSON.parse(rawString);
+
+    if (parsed && parsed.history) {
+      ui.openImportModal(parsed);
+    } else {
+      alert("File JSON bener, tapi kaga ada data history-nya, Cok!");
+    }
+  } catch (e) {
+    console.error("Detail Error:", e);
+    alert("Waduh! Gagal baca file. Format JSON-nya kayaknya ngaco.");
+  }
+};
+
 onMounted(async () => {
-  console.log(JSON.stringify(groupedHistory.value, null, 2));
+  window.addEventListener("onImportData", handleImportEvent);
 
   try {
     ui.setPageLoading(true);
@@ -223,6 +285,10 @@ onMounted(async () => {
       isLoading.value = false;
     }, 800);
   }
+});
+
+onUnmounted(() => {
+  window.removeEventListener("onImportData", handleImportEvent);
 });
 </script>
 

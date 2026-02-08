@@ -4,6 +4,8 @@ export const useUIStore = defineStore('ui', {
         isDark: false,
         isLogoutModalOpen: false,
         isPageLoading: true,
+        isImportModalOpen: false,
+        importData: null as any,
     }),
     actions: {
         toggleTheme() {
@@ -19,6 +21,14 @@ export const useUIStore = defineStore('ui', {
         },
         setPageLoading(status: boolean) {
             this.isPageLoading = status;
+        },
+        openImportModal(data: any) {
+            this.importData = data;
+            this.isImportModalOpen = true;
+        },
+        closeImportModal() {
+            this.isImportModalOpen = false;
+            this.importData = null;
         }
     }
 })

@@ -18,6 +18,7 @@ import android.service.notification.NotificationListenerService
 import android.provider.Settings
 import android.os.PowerManager
 import android.net.Uri
+import androidx.activity.result.contract.ActivityResultContracts
 
 // 1. DEFINISIKAN PLUGIN DI SINI
 @CapacitorPlugin(name = "NotificationStorage")
@@ -40,6 +41,30 @@ class NotificationStoragePlugin : Plugin() {
         sharedPref.edit().remove("pending_list").apply()
         
         call.resolve(ret)
+    }
+    @PluginMethod
+    fun exportData(call: PluginCall) {
+        val dataDariNuxt = call.getString("dataExport") ?: ""
+    
+        if (dataDariNuxt.isEmpty()) {
+            call.reject("Datanya kosong, kaga ada yang bisa di-export!")
+            return
+        }
+
+        val mainActivity = activity as? MainActivity
+        if (mainActivity != null) {
+            mainActivity.exportToDownloads(dataDariNuxt)
+            call.resolve()
+        } else {
+            call.reject("MainActivity tidak ditemukan!")
+        }
+    }
+
+    @PluginMethod
+    fun triggerImport(call: PluginCall) {
+        val mainActivity = activity as? MainActivity
+        mainActivity?.openFilePicker()
+        call.resolve()
     }
 }
 
@@ -147,6 +172,65 @@ class MainActivity : BridgeActivity() {
         super.onDestroy()
         if (instance == this) {
             instance = null
+        }
+    }
+
+    private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: android.net.Uri? ->
+        uri?.let {
+            try {
+                val content = contentResolver.openInputStream(it)?.bufferedReader()?.use { it.readText() }
+                if (content != null) {
+                    // ESCAPING YANG LEBIH AMAN
+                    val escapedContent = content
+                        .replace("\\", "\\\\")
+                        .replace("'", "\\'")
+                        .replace("\n", "\\n")
+                        .replace("\r", "")
+
+                    // KASIH DELAY DIKIT BIAR WEBVIEW SIAP
+                    val jsCode = """
+                        setTimeout(function() {
+                            console.log('Native: Mengirim data import...');
+                            window.dispatchEvent(new CustomEvent('onImportData', { 
+                                detail: { data: '$escapedContent' } 
+                            }));
+                        }, 200);
+                    """.trimIndent()
+                    
+                    bridge?.webView?.evaluateJavascript(jsCode, null)
+                }
+            } catch (e: Exception) {
+                Log.e("APP_NOTIF", "❌ Gagal baca file: ${e.message}")
+            }
+        }
+    }
+
+    fun openFilePicker() {
+        filePickerLauncher.launch("application/json") // Cuma bolehin JSON buat import
+    }
+
+    fun exportToDownloads(data: String) {
+        val isJson = data.trim().startsWith("{") || data.trim().startsWith("[")
+        val ext = if (isJson) "json" else "csv"
+        val mime = if (isJson) "application/json" else "text/csv"
+        val prefix = if (isJson) "BACKUP" else "LAPORAN"
+
+        val fileName = "${prefix}_Ledger_${System.currentTimeMillis()}.$ext"
+
+        val contentValues = android.content.ContentValues().apply {
+            put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+            put(android.provider.MediaStore.MediaColumns.MIME_TYPE, mime)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, "Download/SharedLedger")
+            }
+        }
+
+        val uri = contentResolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+        uri?.let {
+            contentResolver.openOutputStream(it)?.use { stream ->
+                stream.write(data.toByteArray())
+            }
+            Log.d("APP_NOTIF", "✅ File Berhasil: $fileName")
         }
     }
 }

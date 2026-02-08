@@ -50,15 +50,24 @@
 
 <script setup lang="ts">
 import { useUIStore } from "~/stores/ui";
+import { registerPlugin } from "@capacitor/core";
+import { useTransactionStore } from "~/stores/useTransactionStore";
 
+interface NotificationStoragePlugin {
+  exportData(options: { dataExport: string }): Promise<void>;
+}
+const NotificationStorage = registerPlugin<NotificationStoragePlugin>(
+  "NotificationStorage"
+);
 const ui = useUIStore();
 const route = useRoute();
+const transactionStore = useTransactionStore();
 
 const menus = [
-  { name: "Home", icon: "i-heroicons-home", path: "/dashboard" }, // Tambah path
-  { name: "Bills", icon: "i-heroicons-document-text", path: "/dashboard/bills" },
-  { name: "Send", icon: "i-heroicons-paper-airplane", path: "/dashboard/send" },
+  { name: "Home", icon: "i-heroicons-home", path: "/dashboard" },
   { name: "History", icon: "i-heroicons-clock", path: "/history" },
+  { name: "Send", icon: "i-heroicons-paper-airplane", path: "/dashboard/send" },
+  { name: "Export", icon: "i-heroicons-arrow-down-tray", path: "action:export" },
   { name: "Logout", icon: "i-heroicons-arrow-right-on-rectangle", path: "" },
 ];
 
@@ -69,11 +78,48 @@ const activeMenu = computed(() => {
 
 const isDark = computed(() => ui.isDark);
 
-const setActive = (name: string) => {
+const setActive = async (name: string) => {
   if (name === "Logout") {
     ui.openLogoutModal(true);
-  } else {
-    navigateTo(menus.find((m) => m.name === name)?.path);
+  }
+  if (name === "Export") {
+    try {
+      const historyData = transactionStore.history;
+      if (historyData.length === 0) return alert("Kosong, Cok!");
+      const backupData = {
+        history: transactionStore.history,
+        actualBalance: transactionStore.actualBalance, // Simpen saldo
+        exportedAt: new Date().toISOString(),
+      };
+      const jsonData = JSON.stringify(backupData, null, 2);
+
+      const header = "Tanggal,Waktu,Kategori,Tipe,Nominal,Keterangan\n";
+      const rows = historyData
+        .map((item) => {
+          return [
+            item.date,
+            item.time,
+            item.category,
+            item.type,
+            item.amount,
+            `"${item.text}"`,
+          ].join(",");
+        })
+        .join("\n");
+      const csvData = header + rows;
+
+      await NotificationStorage.exportData({ dataExport: jsonData });
+
+      await NotificationStorage.exportData({ dataExport: csvData });
+
+      alert("✅ Double Export Berhasil! Cek folder Download, ada file JSON & CSV.");
+    } catch (e) {
+      alert("Gagal export dua-duanya, Cok!");
+    }
+  }
+  const targetPath = menus.find((m) => m.name === name)?.path;
+  if (targetPath) {
+    navigateTo(targetPath);
   }
 };
 </script>
