@@ -12,6 +12,12 @@ import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.getcapacitor.JSObject
+import android.content.ComponentName 
+import android.app.NotificationManager
+import android.service.notification.NotificationListenerService
+import android.provider.Settings
+import android.os.PowerManager
+import android.net.Uri
 
 // 1. DEFINISIKAN PLUGIN DI SINI
 @CapacitorPlugin(name = "NotificationStorage")
@@ -43,6 +49,27 @@ class MainActivity : BridgeActivity() {
         var instance: MainActivity? = null
     }
 
+    private fun isNotificationServiceRunning(): Boolean {
+        val contentResolver = contentResolver
+        val enabledNotificationListeners = Settings.Secure.getString(contentResolver, "enabled_notification_listeners")
+        val packageName = packageName
+        return enabledNotificationListeners != null && enabledNotificationListeners.contains(packageName)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        try {
+            val componentName = ComponentName(this, AppNotificationListener::class.java)
+            
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                NotificationListenerService.requestRebind(componentName)
+                Log.d("APP_NOTIF", "🔄 Meminta Re-bind Servis (onResume)...")
+            }
+        } catch (e: Exception) {
+            Log.e("APP_NOTIF", "❌ Gagal rebind: ${e.message}")
+        }
+    }
+
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val title = intent?.getStringExtra("title") ?: ""
@@ -64,11 +91,36 @@ class MainActivity : BridgeActivity() {
         }
     }
 
+    private fun checkBatteryOptimization() {
+        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+        val packageName = packageName
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                Log.d("APP_NOTIF", "⚠️ Baterai dibatasi, minta izin White-list...")
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                intent.data = Uri.parse("package:$packageName")
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // REGISTER HARUS SEBELUM SUPER ONCREATE
         registerPlugin(NotificationStoragePlugin::class.java)
         super.onCreate(savedInstanceState)
         instance = this
+
+        checkBatteryOptimization()
+
+        if (!isNotificationServiceRunning()) {
+            Log.d("APP_NOTIF", "⚠️ Izin belum aktif, melempar user ke Settings")
+            val intent = Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+        } else {
+            Log.d("APP_NOTIF", "✅ Izin aman, servis siap tempur")
+        }
     }
 
     override fun onStart() {

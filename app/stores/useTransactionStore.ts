@@ -139,6 +139,7 @@ export const useTransactionStore = defineStore('transaction', {
 
             const isAladin = pkg.toLowerCase().includes('aladin')
             const isBca = pkg.toLowerCase().includes('com.bca') || pkg.toLowerCase().includes('bca')
+            // const isInsta = pkg.toLowerCase().includes('com.instagram') || pkg.toLowerCase().includes('instagram')
 
             if (!isAladin && !isBca) {
                 return
