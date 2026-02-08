@@ -28,7 +28,7 @@
     <div class="flex-1 overflow-y-auto px-6 pb-20 no-scrollbar">
       <DashboardNav />
       <slot>
-        <!-- <div class="top-24 right-4 flex flex-col gap-2 opacity-50 hover:opacity-100">
+        <div class="top-24 right-4 flex flex-col gap-2 opacity-50 hover:opacity-100">
           <button
             @click="
               transactionStore.addTransaction({
@@ -67,7 +67,7 @@
           >
             💸 Test TF Keluar
           </button>
-        </div> -->
+        </div>
         <div class="flex items-center justify-between mt-8 mb-4">
           <h2
             class="text-lg font-bold transition-colors duration-700"

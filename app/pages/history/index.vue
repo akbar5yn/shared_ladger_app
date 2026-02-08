@@ -11,7 +11,9 @@
             <section
               class="relative overflow-hidden p-6 rounded-2xl shadow"
               :class="
-                ui.isDark ? 'bg-slate-700 text-white' : 'bg-slate-100/10 text-slate-900'
+                ui.isDark
+                  ? 'bg-slate-900/50 border border-slate-800 text-white'
+                  : 'bg-slate-100/10 text-slate-900'
               "
             >
               <div
@@ -135,9 +137,7 @@
                       <p
                         class="font-bold text-sm"
                         :class="
-                          item.type === 'income'
-                            ? 'text-green-600'
-                            : 'text-slate-900 dark:text-white'
+                          item.type === 'income' ? 'text-green-600' : 'text-red-500'
                         "
                       >
                         {{ item.type === "income" ? "+" : "-" }}
@@ -168,6 +168,7 @@
 </template>
 
 <script setup lang="ts">
+import { json } from "stream/consumers";
 import DashboardHeader from "~/components/dashboard/DashboardHeader.vue";
 import ModalLogout from "~/components/ui/modals/ModalLogout.vue";
 import ToastModal from "~/components/ui/modals/ToastModal.vue";
@@ -211,6 +212,8 @@ const expenseRatio = computed(() => {
 });
 
 onMounted(async () => {
+  console.log(JSON.stringify(groupedHistory.value, null, 2));
+
   try {
     ui.setPageLoading(true);
     await transactionStore.rehydrate();
