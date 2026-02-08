@@ -2,7 +2,8 @@
 export const useUIStore = defineStore('ui', {
     state: () => ({
         isDark: false,
-        isLogoutModalOpen: false
+        isLogoutModalOpen: false,
+        isPageLoading: true,
     }),
     actions: {
         toggleTheme() {
@@ -15,6 +16,9 @@ export const useUIStore = defineStore('ui', {
         },
         openLogoutModal(isOpen: boolean) {
             this.isLogoutModalOpen = isOpen
+        },
+        setPageLoading(status: boolean) {
+            this.isPageLoading = status;
         }
     }
 })

@@ -189,11 +189,11 @@ const ui = useUIStore();
 const currentTop = ref(500);
 const isDragging = ref(false);
 const isMounted = ref(false);
-let isSpendingLocked = false;
+const isSpendingLocked = ref<boolean>(false);
 const startY = ref(0);
 const startTop = ref(0);
 const limits = reactive({ min: 80, max: 500 });
-const route = useRoute();
+let globalObserver: ResizeObserver | null = null;
 
 interface ICategoryOption {
   label: string;
@@ -320,9 +320,9 @@ const getOptions = (metadata: string) => {
 const updatePositions = () => {
   const h = window.innerHeight;
   const headerEl = document.getElementById("main-header");
-  const spendingEl = document.getElementById("main-slot");
+  const mainSlot = document.getElementById("main-slot");
   const navWrapper = document.getElementById("navigation-wrapper");
-  const spendingContainer = document.getElementById("spending-container");
+  const contentContainer = document.getElementById("content-container");
   const cursorGrab = document.getElementById("cursor-grab");
 
   if (headerEl) {
@@ -338,12 +338,12 @@ const updatePositions = () => {
     safeZone = window.innerHeight - drawerHandleHeight - bottomInset;
   }
 
-  if (spendingEl) {
-    const spendingBottom = Math.floor(spendingEl.getBoundingClientRect().bottom + 20);
+  if (mainSlot) {
+    const spendingBottom = Math.floor(mainSlot.getBoundingClientRect().bottom);
 
     limits.max = spendingBottom > safeZone ? safeZone : spendingBottom;
 
-    if (spendingBottom && navWrapper && cursorGrab && spendingContainer) {
+    if (spendingBottom && navWrapper && cursorGrab && contentContainer) {
       const navHeight = navWrapper.getBoundingClientRect().height;
       const cursorGrabH = cursorGrab.getBoundingClientRect().height;
       const stopTop = h - (navHeight + cursorGrabH);
@@ -351,19 +351,19 @@ const updatePositions = () => {
       if (spendingBottom >= stopTop) {
         limits.max = stopTop;
 
-        if (!isSpendingLocked) {
-          const maxHeight = stopTop - spendingContainer.getBoundingClientRect().top - 20;
+        if (!isSpendingLocked.value) {
+          const maxHeight = stopTop - contentContainer.getBoundingClientRect().top;
 
-          spendingContainer.style.maxHeight = `${maxHeight}px`;
-          spendingContainer.style.overflow = "scroll";
+          contentContainer.style.maxHeight = `${maxHeight}px`;
+          contentContainer.style.overflow = "scroll";
 
-          isSpendingLocked = true;
+          isSpendingLocked.value = true;
         }
       } else {
         if (isSpendingLocked) {
-          spendingEl.style.maxHeight = "";
-          spendingEl.style.overflow = "";
-          isSpendingLocked = false;
+          mainSlot.style.maxHeight = "";
+          mainSlot.style.overflow = "";
+          isSpendingLocked.value = false;
         }
       }
     }
@@ -372,68 +372,13 @@ const updatePositions = () => {
   currentTop.value = limits.max;
 };
 onMounted(() => {
-  // const updatePositions = () => {
-  //   const h = window.innerHeight;
-  //   const headerEl = document.getElementById("main-header");
-  //   const spendingEl = document.getElementById("spending-card");
-  //   const navWrapper = document.getElementById("navigation-wrapper");
-  //   const spendingContainer = document.getElementById("spending-container");
-  //   const cursorGrab = document.getElementById("cursor-grab");
-
-  //   if (headerEl) {
-  //     limits.min = headerEl.getBoundingClientRect().bottom + 10;
-  //   }
-
-  //   let safeZone = h - 100;
-
-  //   if (navWrapper) {
-  //     const bottomInset = 16;
-  //     const drawerHandleHeight = cursorGrab?.getBoundingClientRect().height ?? 0;
-
-  //     safeZone = window.innerHeight - drawerHandleHeight - bottomInset;
-  //   }
-
-  //   if (spendingEl) {
-  //     const spendingBottom = Math.floor(spendingEl.getBoundingClientRect().bottom + 20);
-
-  //     limits.max = spendingBottom > safeZone ? safeZone : spendingBottom;
-
-  //     if (spendingBottom && navWrapper && cursorGrab && spendingContainer) {
-  //       const navHeight = navWrapper.getBoundingClientRect().height;
-  //       const cursorGrabH = cursorGrab.getBoundingClientRect().height;
-  //       const stopTop = h - (navHeight + cursorGrabH);
-
-  //       if (spendingBottom >= stopTop) {
-  //         limits.max = stopTop;
-
-  //         if (!isSpendingLocked) {
-  //           const maxHeight =
-  //             stopTop - spendingContainer.getBoundingClientRect().top - 20;
-
-  //           spendingContainer.style.maxHeight = `${maxHeight}px`;
-  //           spendingContainer.style.overflow = "scroll";
-
-  //           isSpendingLocked = true;
-  //         }
-  //       } else {
-  //         if (isSpendingLocked) {
-  //           spendingEl.style.maxHeight = "";
-  //           spendingEl.style.overflow = "";
-  //           isSpendingLocked = false;
-  //         }
-  //       }
-  //     }
-  //   }
-
-  //   currentTop.value = limits.max;
-  // };
   const resizeObserver = new ResizeObserver(() => {
     updatePositions();
   });
 
-  const spendingEl = document.getElementById("main-slot");
-  if (spendingEl) {
-    resizeObserver.observe(spendingEl);
+  const mainSlot = document.getElementById("main-slot");
+  if (mainSlot) {
+    resizeObserver.observe(mainSlot);
   }
 
   setTimeout(() => {
@@ -443,9 +388,12 @@ onMounted(() => {
 
   onUnmounted(() => {
     resizeObserver.disconnect();
+    mainSlot;
     window.removeEventListener("resize", updatePositions);
   });
 });
+
+onUnmounted(() => {});
 
 const onTouchStart = (e: TouchEvent) => {
   const touch = e.touches[0];
@@ -473,16 +421,28 @@ const onTouchEnd = () => {
   currentTop.value = currentTop.value < mid ? limits.min : limits.max;
 };
 
-watch(
-  () => route.path,
-  async () => {
-    // Tunggu Vue kelar update DOM
-    await nextTick();
+const initObserver = () => {
+  if (globalObserver) globalObserver.disconnect();
 
-    // Kasih napas buat transisi halaman (delay 500ms - 800ms)
-    setTimeout(() => {
+  const mainSlot = document.getElementById("main-slot");
+  if (mainSlot) {
+    globalObserver = new ResizeObserver(() => {
       updatePositions();
-    }, 1500);
+    });
+    globalObserver.observe(mainSlot);
+  }
+};
+
+watch(
+  () => ui.isPageLoading,
+  async (loading) => {
+    if (!loading) {
+      await nextTick();
+      setTimeout(() => {
+        updatePositions();
+        initObserver();
+      }, 500);
+    }
   }
 );
 </script>

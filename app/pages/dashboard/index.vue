@@ -27,10 +27,12 @@ import BalanceCard from "~/components/dashboard/BalanceCard.vue";
 import OverviewCard from "~/components/dashboard/OverviewCard.vue";
 import ModalLogout from "~/components/ui/modals/ModalLogout.vue";
 import ToastModal from "~/components/ui/modals/ToastModal.vue";
+import { useUIStore } from "~/stores/ui";
 import { useTransactionStore } from "~/stores/useTransactionStore";
 
 definePageMeta({ middleware: ["auth"], layout: "default" });
 
+const ui = useUIStore();
 const transactionStore = useTransactionStore();
 const { handleComeTransaction, checkPendingData } = useBankObserver();
 
@@ -38,6 +40,7 @@ const isLoading = ref(true);
 
 onMounted(async () => {
   try {
+    ui.setPageLoading(true);
     await transactionStore.rehydrate();
     handleComeTransaction();
     document.addEventListener("visibilitychange", () => {
@@ -49,7 +52,8 @@ onMounted(async () => {
   } finally {
     setTimeout(() => {
       isLoading.value = false;
-    }, 1000);
+      ui.setPageLoading(false);
+    }, 800);
   }
 });
 </script>

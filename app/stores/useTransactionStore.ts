@@ -202,7 +202,7 @@ export const useTransactionStore = defineStore('transaction', {
                 const item = this.pendingTransactions[index]
                 if (item) {
                     const iconMap: Record<string, string> = {
-                        'Makan/Minum': 'i-heroicons-utensils',
+                        'Makan/Minum': 'i-heroicons-building-storefront',
                         'Belanja': 'i-heroicons-shopping-bag',
                         'Gaji/Income': 'i-heroicons-banknotes',
                         'Tabungan': 'i-heroicons-building-library',

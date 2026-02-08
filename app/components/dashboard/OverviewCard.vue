@@ -1,8 +1,8 @@
 <template>
   <div class="card-wrapper">
     <div
-      id="spending-container"
-      class="card-container relative w-full rounded-3xl px-6 py-5 border transition-all duration-700"
+      id="content-container"
+      class="card-container relative w-full rounded-3xl px-6 py-5 border transition-all duration-700 no-scrollbar mb-6"
       :class="
         ui.isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100 shadow-sm'
       "

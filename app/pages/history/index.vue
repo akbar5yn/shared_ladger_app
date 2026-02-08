@@ -7,9 +7,9 @@
         <Transition name="fade-layout" mode="out-in">
           <DashboardSkeleton v-if="isLoading" key="loading" />
 
-          <div v-else key="content" class="flex flex-col gap-6 px-6">
+          <div v-else key="content" class="flex flex-col px-6">
             <section
-              class="relative overflow-hidden p-6 rounded-[2.5rem] shadow-xl"
+              class="relative overflow-hidden p-6 rounded-2xl shadow"
               :class="
                 ui.isDark ? 'bg-slate-700 text-white' : 'bg-slate-100/10 text-slate-900'
               "
@@ -72,18 +72,22 @@
                 </div>
 
                 <p class="text-[9px] opacity-40 italic leading-none">
-                  *Perbandingan total pengeluaran terhadap total pemasukan dalam riwayat.
+                  *Perbandingan total pengeluaran terhadap actual current balance.
                 </p>
               </div>
             </section>
 
-            <div v-if="transactionStore.history.length > 0" class="flex flex-col gap-8">
+            <div
+              id="content-container"
+              v-if="transactionStore.history.length > 0"
+              class="flex flex-col gap-8 no-scrollbar pt-6 pb-5"
+            >
               <div
                 v-for="(group, date) in groupedHistory"
                 :key="date"
                 class="flex flex-col gap-3"
               >
-                <div class="sticky top-2 z-10">
+                <div class="top-2 z-10">
                   <span
                     class="text-xs font-bold px-3 py-1 rounded-full border shadow-sm"
                     :class="
@@ -100,7 +104,7 @@
                   <div
                     v-for="item in group"
                     :key="item.id"
-                    class="flex items-center gap-4 p-4 rounded-2xl shadow-sm hover:scale-[1.01] transition-transform"
+                    class="flex items-center gap-4 p-4 rounded-2xl shadow-sm border-slate-200 hover:scale-[1.01] transition-transform"
                     :class="
                       ui.isDark
                         ? 'bg-slate-900 text-white border border-slate-800'
@@ -198,18 +202,20 @@ const groupedHistory = computed(() => {
 });
 
 const expenseRatio = computed(() => {
-  const income = transactionStore.totalIncomes || 0;
+  const balance = transactionStore.actualBalance || 0;
   const expense = transactionStore.totalExpenses || 0;
 
-  if (income === 0) return expense > 0 ? 100 : 0;
+  if (balance === 0) return expense > 0 ? 100 : 0;
 
-  return (expense / income) * 100;
+  return (expense / balance) * 100;
 });
 
 onMounted(async () => {
   try {
+    ui.setPageLoading(true);
     await transactionStore.rehydrate();
   } finally {
+    ui.setPageLoading(false);
     setTimeout(() => {
       isLoading.value = false;
     }, 800);
