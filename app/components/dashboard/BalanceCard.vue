@@ -30,17 +30,19 @@
         <div class="flex-1 text-center group cursor-pointer">
           <UModal v-model:open="isOpen">
             <p
-              class="text-xs mb-1 transition-colors duration-700 flex items-center justify-center gap-1"
+              class="text-sm mb-1 transition-colors duration-700 flex items-center justify-center gap-1"
               :class="ui.isDark ? 'text-slate-400' : 'text-gray-500'"
             >
               Current Balance
-              <UIcon name="i-heroicons-pencil-square" class="text-[10px]" />
+              <UIcon name="i-heroicons-pencil-square" class="text-sm" />
             </p>
             <p
               class="text-xl font-bold transition-colors duration-700"
               :class="ui.isDark ? 'text-white' : 'text-slate-900'"
             >
-              {{ transactionStore.formatIDR(transactionStore.remainingBalance) }}
+              {{
+                transactionStore.formatIDR(transactionStore.remainingBalance)
+              }}
             </p>
 
             <template #content>
@@ -55,14 +57,18 @@
               >
                 <template #header>
                   <div class="flex items-center justify-between">
-                    <h3 class="text-base font-bold text-slate-900 dark:text-white">
+                    <h3
+                      class="text-base font-bold text-slate-900 dark:text-white"
+                    >
                       Update Saldo Manual
                     </h3>
                   </div>
                 </template>
 
                 <div class="space-y-4">
-                  <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                  <p
+                    class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed"
+                  >
                     Masukkan nominal untuk menambah saldo utama mu saat ini.
                   </p>
 
@@ -78,8 +84,7 @@
                       icon="i-heroicons-banknotes"
                       class="w-full"
                       :ui="{
-                        base:
-                          'bg-white dark:bg-gray-200/50 border text-sm font-black text-slate-900 ring-0 focus:ring-0 focus-visible:ring-0 font-medium',
+                        base: 'bg-white dark:bg-gray-200/50 border text-sm font-black text-slate-900 ring-0 focus:ring-0 focus-visible:ring-0 font-medium',
                       }"
                       autofocus
                     />
@@ -112,7 +117,7 @@
 
         <div class="flex-1 text-center">
           <p
-            class="text-xs mb-1 transition-colors duration-700"
+            class="text-sm mb-1 transition-colors duration-700"
             :class="ui.isDark ? 'text-slate-400' : 'text-gray-500'"
           >
             Total Expenses
@@ -130,31 +135,31 @@
 </template>
 
 <script setup lang="ts">
-import { useUIStore } from "~/stores/ui";
-import { useTransactionStore } from "~/stores/useTransactionStore";
-const ui = useUIStore();
-const transactionStore = useTransactionStore();
-const isOpen = ref(false);
-const manualAmount = ref<number | null>(null);
+import { useUIStore } from '~/stores/ui'
+import { useTransactionStore } from '~/stores/useTransactionStore'
+const ui = useUIStore()
+const transactionStore = useTransactionStore()
+const isOpen = ref(false)
+const manualAmount = ref<number | null>(null)
 
 const displayAmount = computed({
   get: () => {
-    if (!manualAmount.value || manualAmount.value === 0) return "";
-    return manualAmount.value.toLocaleString("id-ID");
+    if (!manualAmount.value || manualAmount.value === 0) return ''
+    return manualAmount.value.toLocaleString('id-ID')
   },
   set: (newValue) => {
-    const numberValue = parseInt(newValue.replace(/\D/g, ""));
-    manualAmount.value = isNaN(numberValue) ? 0 : numberValue;
+    const numberValue = parseInt(newValue.replace(/\D/g, ''))
+    manualAmount.value = isNaN(numberValue) ? 0 : numberValue
   },
-});
+})
 
 const handleUpdateBalance = () => {
   if (manualAmount.value && manualAmount.value > 0) {
-    transactionStore.addManualIncome(Number(manualAmount.value));
-    manualAmount.value = null;
-    isOpen.value = false;
+    transactionStore.addManualIncome(Number(manualAmount.value))
+    manualAmount.value = null
+    isOpen.value = false
   }
-};
+}
 </script>
 
 <style lang="scss" scoped>

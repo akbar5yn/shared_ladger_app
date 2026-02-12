@@ -1,3 +1,4 @@
+import { is } from "zod/v4/locales";
 import type { IRecentTransaction, TTransactionCategory, TTransactionMetadata } from "~/types/INotification";
 
 const extractNominal = (text: string): number => {
@@ -122,8 +123,19 @@ export const useTransactionStore = defineStore('transaction', {
                 console.error("❌ Gagal simpan ke disk:", e)
             }
         },
-        async addTransaction(payload: { title: string, text: string, pkg: string, timestamp?: number }) {
-            const { title, text, pkg, timestamp } = payload
+        async addTransaction(payload: {
+            title: string,
+            text: string,
+            pkg: string,
+            timestamp?: number,
+            amount?: number,
+            metadata?: TTransactionMetadata,
+            icon?: string
+            type?: TTransactionMetadata
+        }) {
+            const { title, text, pkg, timestamp, amount: manualAmount, metadata: manualMetadata } = payload
+
+            const isOcr = pkg.toLowerCase() === 'ocr'
 
             const nativeId = timestamp || Date.now()
 
@@ -133,7 +145,7 @@ export const useTransactionStore = defineStore('transaction', {
                 return sameText && isWithinTolerance;
             }) || this.history.some(t => t.text === text && Math.abs((t.nativeId || 0) - nativeId) < 5000);
 
-            if (isDuplicate) {
+            if (isDuplicate && !isOcr) {
                 return
             }
 
@@ -141,16 +153,15 @@ export const useTransactionStore = defineStore('transaction', {
             const isBca = pkg.toLowerCase().includes('com.bca') || pkg.toLowerCase().includes('bca')
             // const isInsta = pkg.toLowerCase().includes('com.instagram') || pkg.toLowerCase().includes('instagram')
 
-            if (!isAladin && !isBca) {
+            if (!isAladin && !isBca && !isOcr) {
                 return
             }
 
-            const amount = extractNominal(text)
+            const amount = manualAmount !== undefined ? manualAmount : extractNominal(text)
             const lowerTitle = title.toLowerCase()
             const lowerText = text.toLowerCase()
 
-            let categoryType: TTransactionMetadata = 'UNCLEAR'
-
+            let categoryType: TTransactionMetadata = manualMetadata || 'UNCLEAR'
             if (
                 lowerTitle.includes('transaksi uang masuk') ||
                 lowerTitle.includes('BCA mobile') ||
