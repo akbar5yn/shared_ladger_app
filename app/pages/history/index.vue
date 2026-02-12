@@ -128,6 +128,7 @@
                 <div class="flex flex-col gap-2">
                   <div
                     v-for="item in group"
+                    @click="openEditHistoryModal(item)"
                     :key="item.id"
                     class="flex items-center gap-4 p-4 rounded-2xl shadow-sm border-slate-200 hover:scale-[1.01] transition-transform"
                     :class="
@@ -190,19 +191,182 @@
       <ModalLogout />
       <ToastModal />
     </ClientOnly>
+    <UModal
+      v-model:open="isEditHistoryModalOpen"
+      :ui="{
+        content: 'w-[92vw] sm:max-w-md mx-auto rounded-[28px] overflow-hidden',
+      }"
+    >
+      <template #content>
+        <UCard
+          :ui="{
+            root: `border-none shadow-2xl ${ui.isDark ? 'bg-slate-900' : 'bg-white'}`,
+            header: `px-6 py-5 border-b ${
+              ui.isDark
+                ? 'bg-slate-800/40 border-slate-800'
+                : 'bg-gray-50 border-gray-100'
+            }`,
+            body: 'p-5',
+            footer: `px-6 py-4 border-none ${
+              ui.isDark ? 'bg-slate-800/40' : 'bg-gray-50'
+            }`,
+          }"
+        >
+          <template #header>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-10 h-10 rounded-full flex items-center justify-center bg-amber-500/10 text-amber-500"
+                >
+                  <UIcon name="i-heroicons-document-magnifying-glass" class="text-xl" />
+                </div>
+                <div>
+                  <h3
+                    class="font-bold"
+                    :class="ui.isDark ? 'text-white' : 'text-slate-900'"
+                  >
+                    Detail Transaksi
+                  </h3>
+                  <p
+                    class="text-[10px] text-gray-400 font-bold uppercase tracking-widest"
+                  >
+                    Update record data
+                  </p>
+                </div>
+              </div>
+              <UButton
+                color="neutral"
+                variant="ghost"
+                icon="i-heroicons-x-mark"
+                class="rounded-full bg-gray-200/50 dark:bg-slate-800"
+                @click="isEditHistoryModalOpen = false"
+              />
+            </div>
+          </template>
+
+          <div class="flex flex-col gap-4">
+            <div
+              class="p-4 rounded-[24px] flex flex-col items-center justify-center border border-dashed"
+              :class="
+                ui.isDark
+                  ? 'bg-slate-800/50 border-slate-700'
+                  : 'bg-slate-50 border-slate-200'
+              "
+            >
+              <p
+                class="text-[9px] uppercase tracking-[0.2em] font-black text-slate-400 mb-1"
+              >
+                Total Transaksi
+              </p>
+
+              <input
+                :value="formattedDisplayAmount"
+                @input="onInputAmount"
+                type="text"
+                class="bg-transparent text-3xl font-black text-amber-500 focus:outline-none border-none p-0 w-full text-center"
+                placeholder="Rp 0"
+              />
+
+              <div
+                class="flex items-center justify-center gap-1.5 mt-2 text-gray-500 text-[10px] font-bold"
+              >
+                <UIcon name="i-heroicons-calendar-days" class="text-xs" />
+                <span>{{ editTempData.date }} • {{ editTempData.time }}</span>
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-3">
+              <div class="flex flex-col gap-1.5">
+                <label
+                  class="text-[10px] font-black uppercase tracking-wider px-1"
+                  :class="ui.isDark ? 'text-slate-400' : 'text-slate-500'"
+                  >Alasan / Catatan</label
+                >
+                <UInput
+                  v-model="editTempData.text"
+                  icon="i-heroicons-pencil-square"
+                  :ui="{
+                    base: `h-10 rounded-xl text-md border border-gray-800 focus:border-gray-500 ring-0 focus:ring-0 transition-all focus-visible:ring-0 ${
+                      ui.isDark ? 'bg-slate-800 text-white' : 'bg-white text-slate-900'
+                    }`,
+                  }"
+                />
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <label
+                  class="text-[10px] font-black uppercase tracking-wider px-1"
+                  :class="ui.isDark ? 'text-slate-400' : 'text-slate-500'"
+                  >Tanggal Transaksi</label
+                >
+                <UInput
+                  v-model="editTempData.date"
+                  type="date"
+                  icon="i-heroicons-calendar"
+                  :ui="{
+                    base: `h-10 rounded-xl text-md border border-gray-800 focus:border-gray-500 ring-0 focus:ring-0 transition-all focus-visible:ring-0 ${
+                      ui.isDark ? 'bg-slate-800 text-white' : 'bg-white text-slate-900'
+                    }`,
+                  }"
+                />
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <label
+                  class="text-[10px] font-black uppercase tracking-wider px-1"
+                  :class="ui.isDark ? 'text-slate-400' : 'text-slate-500'"
+                  >Waktu</label
+                >
+                <UInput
+                  v-model="editTempData.time"
+                  type="time"
+                  icon="i-heroicons-clock"
+                  :ui="{
+                    base: `h-10 rounded-xl text-md border border-gray-800 focus:border-gray-500 ring-0 focus:ring-0 transition-all focus-visible:ring-0 ${
+                      ui.isDark ? 'bg-slate-800 text-white' : 'bg-white text-slate-900'
+                    }`,
+                  }"
+                />
+              </div>
+            </div>
+          </div>
+
+          <template #footer>
+            <div class="flex items-center gap-3">
+              <UButton
+                color="error"
+                variant="soft"
+                class="h-11 w-11 rounded-xl flex items-center justify-center p-0 shadow-sm"
+                @click="handleDeleteHistory"
+              >
+                <UIcon name="i-heroicons-trash" class="text-xl mx-auto" />
+              </UButton>
+              <UButton
+                color="warning"
+                block
+                label="Simpan"
+                class="flex-1 h-11 rounded-xl font-bold uppercase tracking-wider shadow-md active:scale-95 transition-all"
+                @click="handleUpdateHistory"
+              />
+            </div>
+          </template>
+        </UCard>
+      </template>
+    </UModal>
   </div>
 </template>
 
 <script setup lang="ts">
+import { registerPlugin } from "@capacitor/core";
 import DashboardHeader from "~/components/dashboard/DashboardHeader.vue";
 import ModalLogout from "~/components/ui/modals/ModalLogout.vue";
 import ToastModal from "~/components/ui/modals/ToastModal.vue";
+import ModalImport from "~/components/ui/modals/ModalImport.vue";
 import { useUIStore } from "~/stores/ui";
 import { useTransactionStore } from "~/stores/useTransactionStore";
 import type { IRecentTransaction } from "~/types/INotification";
-import { registerPlugin } from "@capacitor/core";
-import ModalImport from "~/components/ui/modals/ModalImport.vue";
 
+// 1. CONFIG & PLUGINS
 definePageMeta({ middleware: ["auth"], layout: "default" });
 
 interface NotificationStoragePlugin {
@@ -212,22 +376,69 @@ const NotificationStorage = registerPlugin<NotificationStoragePlugin>(
   "NotificationStorage"
 );
 
+// 2. STORES & BASE STATES
 const ui = useUIStore();
 const transactionStore = useTransactionStore();
 const isLoading = ref(true);
 
-const handleImportAction = async () => {
-  try {
-    await NotificationStorage.triggerImport();
-  } catch (e) {
-    alert("Gagal buka file picker");
-  }
-};
+// 3. EDIT HISTORY MODAL STATE
+const isEditHistoryModalOpen = ref(false);
+const editTempData = ref({
+  id: "",
+  amount: 0,
+  text: "",
+  date: "",
+  time: "",
+  type: "",
+});
 
+// 4. COMPUTED PROPERTIES
+// Logic formatting rupiah buat di input modal
+const formattedDisplayAmount = computed(() => {
+  const val = editTempData.value.amount;
+  if (!val && val !== 0) return "";
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(val);
+});
+
+// Perbandingan pengeluaran vs saldo
+const expenseRatio = computed(() => {
+  const balance = transactionStore.actualBalance || 0;
+  const expense = transactionStore.totalExpenses || 0;
+  if (balance === 0) return expense > 0 ? 100 : 0;
+  return (expense / balance) * 100;
+});
+
+// Pengelompokan riwayat berdasarkan tanggal
 const groupedHistory = computed(() => {
   const groups: Record<string, IRecentTransaction[]> = {};
+  const safeHistory = [...(transactionStore.history || [])];
 
-  const safeHistory = transactionStore.history || [];
+  safeHistory.sort((a, b) => {
+    const parse = (d: string = "", t: string = "") => {
+      if (!d) return 0;
+
+      const p = d.split("/");
+      if (p.length !== 3) return 0;
+      const day = parseInt(p[0] || "0");
+      const month = parseInt(p[1] || "1") - 1;
+      const year = parseInt(p[2] || "0");
+
+      const tm = (t || "00:00").split(":");
+      const hour = parseInt(tm[0] || "0");
+      const minute = parseInt(tm[1] || "0");
+
+      return new Date(year, month, day, hour, minute).getTime();
+    };
+
+    const valA = parse(a.date as string, a.time as string);
+    const valB = parse(b.date as string, b.time as string);
+
+    return valB - valA;
+  });
 
   safeHistory.forEach((item) => {
     if (item && item.date) {
@@ -244,24 +455,85 @@ const groupedHistory = computed(() => {
   return groups;
 });
 
-const expenseRatio = computed(() => {
-  const balance = transactionStore.actualBalance || 0;
-  const expense = transactionStore.totalExpenses || 0;
+// 5. METHODS / ACTIONS
+// Handle input mask rupiah
+const onInputAmount = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  const rawValue = target.value.replace(/[^0-9]/g, "");
+  const numericValue = parseInt(rawValue) || 0;
+  editTempData.value.amount = numericValue;
+};
 
-  if (balance === 0) return expense > 0 ? 100 : 0;
+// Modal Actions
+const openEditHistoryModal = (item: IRecentTransaction) => {
+  let dateForInput = "";
+  if (item.date && item.date.includes("/")) {
+    const [d, m, y] = item.date.split("/");
+    dateForInput = `${y}-${m}-${d}`;
+  } else {
+    dateForInput = item.date;
+  }
 
-  return (expense / balance) * 100;
-});
+  editTempData.value = {
+    id: item.id as string,
+    amount: item.amount,
+    text: item.text,
+    date: dateForInput,
+    time: item.time,
+    type: item.type,
+  };
+  isEditHistoryModalOpen.value = true;
+};
+
+const handleUpdateHistory = async () => {
+  const history = transactionStore?.history;
+  if (!history) return;
+
+  const index = history.findIndex((t) => t.id === editTempData.value.id);
+  if (index !== -1 && history[index]) {
+    history[index].amount = Number(editTempData.value.amount);
+    history[index].text = editTempData.value.text;
+
+    const rawDate = editTempData.value.date;
+    if (rawDate && rawDate.includes("-")) {
+      const [y, m, d] = rawDate.split("-");
+      history[index].date = `${d}/${m}/${y}`;
+    } else {
+      history[index].date = rawDate;
+    }
+    history[index].time = editTempData.value.time;
+    await transactionStore.saveToDisk();
+    isEditHistoryModalOpen.value = false;
+  }
+};
+
+const handleDeleteHistory = async () => {
+  if (confirm("Yakin mau hapus riwayat ini, Cok?")) {
+    if (!transactionStore) return;
+    transactionStore.history = transactionStore.history.filter(
+      (t) => t.id !== editTempData.value.id
+    );
+    await transactionStore.saveToDisk();
+    isEditHistoryModalOpen.value = false;
+  }
+};
+
+// Native/Import Actions
+const handleImportAction = async () => {
+  try {
+    await NotificationStorage.triggerImport();
+  } catch (e) {
+    alert("Gagal buka file picker");
+  }
+};
 
 const handleImportEvent = (event: any) => {
   try {
     console.log("Nuxt: Data diterima dari Native", event.detail);
-
     const rawString = event.detail.data;
     if (!rawString) return;
 
     const parsed = JSON.parse(rawString);
-
     if (parsed && parsed.history) {
       ui.openImportModal(parsed);
     } else {
@@ -273,6 +545,7 @@ const handleImportEvent = (event: any) => {
   }
 };
 
+// 6. LIFECYCLE HOOKS
 onMounted(async () => {
   window.addEventListener("onImportData", handleImportEvent);
 

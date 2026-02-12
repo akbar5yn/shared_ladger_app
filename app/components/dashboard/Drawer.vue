@@ -201,17 +201,9 @@
           }"
         >
           <template #header>
-            <div class="flex items-center justify-between">
-              <h3 class="font-bold" :class="ui.isDark ? 'text-white' : 'text-slate-900'">
-                Detail Struk Terdeteksi
-              </h3>
-              <UButton
-                color="neutral"
-                variant="ghost"
-                icon="i-heroicons-x-mark"
-                @click="isOcrModalOpen = false"
-              />
-            </div>
+            <h3 class="font-bold" :class="ui.isDark ? 'text-white' : 'text-slate-900'">
+              Detail Struk Terdeteksi
+            </h3>
           </template>
 
           <div class="space-y-6">
@@ -297,7 +289,16 @@
           }"
         >
           <template #header>
-            <h3 class="font-bold">Edit & Kategori Lainnya</h3>
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold">Edit & Kategori Lainnya</h3>
+              <UButton
+                color="neutral"
+                variant="ghost"
+                icon="i-heroicons-x-mark"
+                class="rounded-full bg-gray-200/50 dark:bg-slate-800"
+                @click="isEditModalOpen = false"
+              />
+            </div>
           </template>
 
           <div class="space-y-6">
