@@ -14,7 +14,7 @@ export default defineNuxtConfig({
     provider: 'none',
   },
   compatibilityDate: '2025-07-15',
-  devtools: { enabled: true },
+  devtools: { enabled: false },
   app: {
     head: {
       title: 'Shared Ledger',

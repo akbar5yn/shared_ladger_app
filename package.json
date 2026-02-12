@@ -17,6 +17,8 @@
     "@capacitor/preferences": "^8.0.0",
     "@capacitor/status-bar": "^8.0.0",
     "@capacitor/toast": "^8.0.0",
+    "@capawesome/capacitor-file-picker": "^8.0.1",
+    "@jcesarmobile/capacitor-ocr": "^0.3.0",
     "@nuxt/eslint": "^1.10.0",
     "@nuxt/image": "^2.0.0",
     "@nuxt/ui": "^4.1.0",

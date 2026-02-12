@@ -942,6 +942,11 @@
   resolved "https://registry.yarnpkg.com/@capacitor/toast/-/toast-8.0.0.tgz#3f060340eeada2b4c9448f1502ad0525e3e00c8a"
   integrity sha512-khWSYsBd+kc28s+nTfswxEfTQ3edY2f0BbvPZmEoBnXclunZbC7Bn1/ZyjKtM9wEA1RC5Umq4RUeFh8TtP+02g==
 
+"@capawesome/capacitor-file-picker@^8.0.1":
+  version "8.0.1"
+  resolved "https://registry.yarnpkg.com/@capawesome/capacitor-file-picker/-/capacitor-file-picker-8.0.1.tgz#ce093abb8d037571c22ffed9f9a1af5a7b3a55d5"
+  integrity sha512-yl3INjnmn2pmMF5pHccpdv3DYZhz6lrY0GAquN4lfiON/70aUcnwpQPV2ky5vKYZjlvBIcl/CjDwN4fYOWXgLg==
+
 "@capsizecss/metrics@^3.5.0":
   version "3.6.2"
   resolved "https://registry.yarnpkg.com/@capsizecss/metrics/-/metrics-3.6.2.tgz#5f263c2e6fd8a681aeccb2a89fe6d17acba0f52e"
@@ -1630,6 +1635,11 @@
   integrity sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==
   dependencies:
     minipass "^7.0.4"
+
+"@jcesarmobile/capacitor-ocr@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@jcesarmobile/capacitor-ocr/-/capacitor-ocr-0.3.0.tgz#6723a583cbd5202e07f4a5df91c726af7c189fa6"
+  integrity sha512-P/NFren9uaiG0+LvwJbkIVmSCVUsFA+IYwoJGb1gv7ZjdshxcuMhKM46k1+sK5Cn13JGfS7LgEp3Mr+YnSBtzw==
 
 "@jridgewell/gen-mapping@^0.3.12", "@jridgewell/gen-mapping@^0.3.5":
   version "0.3.13"
