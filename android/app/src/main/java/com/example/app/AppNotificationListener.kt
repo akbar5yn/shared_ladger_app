@@ -170,27 +170,27 @@ class AppNotificationListener : NotificationListenerService() {
             val postTime = sbn.postTime
 
             // Debounce 1 detik
+            val isSummary = (sbn.notification.flags and android.app.Notification.FLAG_GROUP_SUMMARY) != 0
+            if (title.isEmpty() || text.isEmpty() || isSummary) return
+
             if (text == lastText && postTime == lastPostTime) return
             lastText = text
             lastPostTime = postTime
-
-            saveToGudang(title, text, pkg, postTime)
 
             if (pkg.contains("aladin") || pkg.contains("android.bank")) {
                 saveToGudang(title, text, pkg, postTime)
                 incrementDailyCount()
                 showForegroundNotification() 
-            }
 
-            Handler(Looper.getMainLooper()).post {
-                val intent = Intent("com.example.app.NOTIFICATION_RECEIVED")
-                intent.putExtra("title", title)
-                intent.putExtra("text", text)
-                intent.putExtra("pkg", pkg)
-                intent.putExtra("timestamp", postTime)
-                sendBroadcast(intent)
+                Handler(Looper.getMainLooper()).post {
+                    val intent = Intent("com.example.app.NOTIFICATION_RECEIVED")
+                    intent.putExtra("title", title)
+                    intent.putExtra("text", text)
+                    intent.putExtra("pkg", pkg)
+                    intent.putExtra("timestamp", postTime)
+                    sendBroadcast(intent)
+                }
             }
-
         } finally {
             if (wl.isHeld) wl.release()
         }
