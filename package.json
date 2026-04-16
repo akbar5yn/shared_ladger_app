@@ -45,6 +45,12 @@
     "vue-tsc": "^3.1.4"
   },
   "lint-staged": {
-    "**/*.{js,ts,vue}": "bun ai-reviewer.ts"
+    "app/**/*.{js,ts,vue}": [
+      "eslint --fix",
+      "bun ai-reviewer.ts"
+    ],
+    "server/**/*.{js,ts}": [
+      "bun ai-reviewer.ts"
+    ]
   }
 }
