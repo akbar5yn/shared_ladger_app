@@ -76,8 +76,8 @@ async function runReview(): Promise<void> {
 
         Instruksi Akhir:
         - Berikan poin-poin saran jika ada pelanggaran.
-        - Jika ada satu saja aturan yang dilanggar parah, akhiri dengan kata "FAILED".
-        - Jika semua aman, balas hanya dengan "PASSED".
+        - Jika ada satu saja aturan yang dilanggar parah, akhiri dengan kata kunci: [[RESULT_FAILED]].
+        - Jika semua aman, balas hanya dengan kata kunci: [[RESULT_PASSED]].
         - PENTING: Jika perubahan terjadi pada file 'ai-reviewer.ts' atau file di dalam folder 'ai-rules/', BERIKAN STATUS [STATUS_PASSED] SECARA OTOMATIS untuk file tersebut. Jangan mereview logika sistem AI Guard itu sendiri.`,
                 options: {
                     temperature: 0,
