@@ -7,7 +7,8 @@
     "dev": "nuxt dev --port 3002",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "prepare": "husky"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.1",
@@ -37,8 +38,13 @@
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "sass-embedded": "^1.97.2",
     "vite-plugin-checker": "^0.11.0",
     "vue-tsc": "^3.1.4"
+  },
+  "lint-staged": {
+    "**/*.{js,ts,vue}": "bun ai-reviewer.ts"
   }
 }
