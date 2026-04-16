@@ -79,7 +79,9 @@ async function runReview(): Promise<void> {
         - Berikan poin-poin saran jika ada pelanggaran.
         - Jika ada satu saja aturan yang dilanggar parah, akhiri dengan kata kunci: [[RESULT_FAILED]].
         - Jika semua aman, balas hanya dengan kata kunci: [[RESULT_PASSED]].
-        - PENTING: Jika perubahan terjadi pada file 'ai-reviewer.ts' atau file di dalam folder 'ai-rules/', BERIKAN STATUS [STATUS_PASSED] SECARA OTOMATIS untuk file tersebut. Jangan mereview logika sistem AI Guard itu sendiri.`,
+        - PENTING: Jika perubahan terjadi pada file 'ai-reviewer.ts' atau file di dalam folder 'ai-rules/', BERIKAN STATUS [STATUS_PASSED] SECARA OTOMATIS untuk file tersebut. Jangan mereview logika sistem AI Guard itu sendiri.
+        - Jangan berasumsi ada kode yang tidak tertulis. Review hanya apa yang ada di dalam diff.`,
+
                 options: {
                     temperature: 0,
                     num_ctx: 4096
