@@ -74,14 +74,21 @@ async function runReview(): Promise<void> {
         });
 
         const result = (await response.json()) as OllamaResponse;
-        const feedback = result.response;
+        const feedback = result.response.trim();
 
-        if (feedback.includes("FAILED")) {
+        const isPassed = feedback.toUpperCase().includes("PASSED");
+        const isFailed = feedback.toUpperCase().includes("FAILED");
+
+        if (isFailed) {
             console.error("\n❌ COMMIT DITOLAK OLEH AI GUARD:\n");
-            console.log(feedback.replace("FAILED", "").trim());
+            console.log(feedback);
+            console.log("\n--------------------------------------------------");
             process.exit(1);
+        } else if (isPassed) {
+            console.log("✅ AI Approved! Kode Anda 'Masterpiece'.");
+            process.exit(0);
         } else {
-            console.log("✅ AI Approved! Semua modul aturan terpenuhi.");
+            console.warn("⚠️ Respons AI tidak jelas, tetapi tidak ada tanda FAILED. Melanjutkan...");
             process.exit(0);
         }
     } catch (err: any) {
