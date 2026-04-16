@@ -93,13 +93,6 @@ async function runReview(): Promise<void> {
 
         if (feedback.includes("[[RESULT_FAILED]]")) {
             console.error("\n❌ COMMIT DITOLAK OLEH AI GUARD:\n");
-            const reason = feedback.replace("[[RESULT_FAILED]]", "").trim();
-            if (reason) {
-                console.log(reason);
-            } else {
-                console.log("AI menolak commit ini tetapi tidak memberikan alasan spesifik.");
-                console.log("Kemungkinan besar: Pelanggaran struktur folder atau penggunaan apiFetch yang dilarang.");
-            }
             console.log(feedback.replace("[[RESULT_FAILED]]", "").trim());
             console.log("\n--------------------------------------------------");
             process.exit(1);
