@@ -23,7 +23,7 @@ async function runReview(): Promise<void> {
     }
 
     // 1. Ambil Diff
-    const diff = spawnSync("git", ["diff", "--cached"], { encoding: "utf-8" }).stdout;
+    const diff = spawnSync("git", ["diff", "--cached", "--name-only"], { encoding: "utf-8" }).stdout;
     const fullDiff = spawnSync("git", ["diff", "--cached"], { encoding: "utf-8" }).stdout;
     if (!fullDiff || fullDiff.trim() === "") process.exit(0);
 
