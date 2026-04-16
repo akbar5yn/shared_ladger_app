@@ -68,11 +68,11 @@ async function runReview(): Promise<void> {
                 model: "qwen2.5-coder:3b",
                 prompt: `Tugasmu adalah mereview potongan kode (GIT DIFF) berdasarkan daftar aturan di bawah ini.
         
-        DAFTAR ATURAN:
+        ATURAN ARSITEKTUR:
         ${combinedRules}
 
         KODE DIFF UNTUK DIREVIEW:
-        ${diff}
+        ${fullDiff}
 
         Instruksi Akhir:
         - Berikan poin-poin saran jika ada pelanggaran.
