@@ -43,19 +43,19 @@ export const useAuthStore = defineStore("auth", {
     },
 
     async restoreSession() {
-      await appLog('[AUTH] restoreSession start')
+      // await appLog('[AUTH] restoreSession start')
 
       const { value } = await Preferences.get({ key: 'auth_token' })
       const { value: guestStatus } = await Preferences.get({ key: 'is_guest' })
 
-      await appLog('[AUTH] token = ' + (value ? 'FOUND' : 'EMPTY'))
-      await appLog('[AUTH] isGuest = ' + guestStatus)
+      // await appLog('[AUTH] token = ' + (value ? 'FOUND' : 'EMPTY'))
+      // await appLog('[AUTH] isGuest = ' + guestStatus)
 
       if (!value) {
         this.token = null;
         this.isLoggedIn = false;
         this.hydrated = true;
-        return await appLog('Token empty, isGuest: ' + this.isGuest)
+        // return await appLog('Token empty, isGuest: ' + this.isGuest)
       }
       if (value) {
         this.token = value
@@ -64,7 +64,7 @@ export const useAuthStore = defineStore("auth", {
       }
 
       this.hydrated = true
-      await appLog('[AUTH] hydrated = true')
+      // await appLog('[AUTH] hydrated = true')
     },
 
     async logout() {

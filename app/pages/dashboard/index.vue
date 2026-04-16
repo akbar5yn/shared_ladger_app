@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-5">
+  <div class="flex flex-col gap-3">
     <DashboardHeader id="main-header" />
     <main id="main-slot" class="main-index flex flex-col gap-2">
       <ClientOnly>

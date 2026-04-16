@@ -32,7 +32,7 @@ export const useTransactionStore = defineStore('transaction', {
         },
 
         remainingBalance(): number {
-            return (this.actualBalance + this.totalIncomes) - this.totalExpenses;
+            return this.actualBalance;
         },
 
         spendingPercentage(): number {
@@ -97,6 +97,64 @@ export const useTransactionStore = defineStore('transaction', {
 
         formattedTotalExpenses(): string {
             return this.formatIDR(this.totalExpenses);
+        },
+        financialAnalysis: (state) => {
+            const budget = state.monthlyBudget || 0;
+
+            // Pemetaan Kategori ke Kelompok Besar
+            const needsCategories = ['Makan/Minum', 'Cicilan/Tagihan', 'Transportasi'];
+            const wantsCategories = ['Jajan', 'Belanja', 'Lainnya'];
+            const savingsCategories = ['Tabungan', 'Investasi'];
+
+            const expenseHistory = state.history.filter(t => t.type === 'expense');
+
+            const needsTotal = expenseHistory
+                .filter(t => needsCategories.includes(t.category || ''))
+                .reduce((acc, curr) => acc + curr.amount, 0);
+
+            const wantsTotal = expenseHistory
+                .filter(t => wantsCategories.includes(t.category || ''))
+                .reduce((acc, curr) => acc + curr.amount, 0);
+
+            const savingsTotal = expenseHistory
+                .filter(t => savingsCategories.includes(t.category || ''))
+                .reduce((acc, curr) => acc + curr.amount, 0);
+
+            return {
+                budget,
+                needs: {
+                    total: needsTotal,
+                    limit: budget * 0.5,
+                    percentage: budget > 0 ? (needsTotal / (budget * 0.5)) * 100 : 0
+                },
+                wants: {
+                    total: wantsTotal,
+                    limit: budget * 0.3,
+                    percentage: budget > 0 ? (wantsTotal / (budget * 0.3)) * 100 : 0
+                },
+                savings: {
+                    total: savingsTotal,
+                    limit: budget * 0.2,
+                    percentage: budget > 0 ? (savingsTotal / (budget * 0.2)) * 100 : 0
+                }
+            };
+        },
+
+        // 2. Pesan Penasihat (Financial Advisor)
+        advisorMessage: (state) => {
+            const { needs, wants, budget } = (state as any).financialAnalysis;
+            if (budget <= 0) return "Set budget bulanan lu dulu, Cok, biar gue bisa analisa!";
+
+            if (wants.percentage > 100) {
+                return "Waduh Cok! Jatah jajan (Wants) lu udah jebol. Stop belanja yang nggak perlu atau lu bakal ngutang!";
+            }
+            if (needs.percentage > 100) {
+                return "Kebutuhan pokok (Needs) lu udah lewat batas. Coba cek lagi, ada tagihan yang bisa dihemat nggak?";
+            }
+            if (wants.percentage > 80) {
+                return "Hati-hati, jatah jajan lu sisa dikit lagi. Rem dulu, jangan laper mata!";
+            }
+            return "Keuangan lu masih aman terkendali. Pertahankan gaya hidup hemat lu, Cok!";
         }
     },
 
@@ -239,14 +297,19 @@ export const useTransactionStore = defineStore('transaction', {
                     }
 
                     this.history.unshift(confirmedData)
+                    if (finalType === 'income') {
+                        this.actualBalance += item.amount
+                    } else {
+                        this.actualBalance -= item.amount
+                    }
                 }
                 this.pendingTransactions.splice(index, 1)
                 this.saveToDisk()
             }
         },
 
-        addManualIncome(amount: number) {
-            this.actualBalance += amount;
+        updateActualBalance(amount: number) {
+            this.actualBalance = amount;
             this.saveToDisk();
         },
 

@@ -2,7 +2,7 @@
   <div class="card-wrapper">
     <div
       id="content-container"
-      class="card-container relative w-full rounded-3xl px-6 py-5 border transition-all duration-700 no-scrollbar mb-6"
+      class="card-container relative w-full rounded-3xl px-6 py-5 mb-6 border transition-all duration-700 no-scrollbar"
       :class="
         ui.isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100 shadow-sm'
       "
@@ -155,9 +155,87 @@
               }}
             </span>
           </div>
+
+          <div
+            v-if="!isIncomeMode && transactionStore.monthlyBudget > 0"
+            class="mt-4 pt-5 border-t border-dashed border-slate-200 dark:border-slate-800 space-y-5"
+          >
+            <div
+              class="p-4 rounded-2xl transition-all duration-500 flex gap-3 items-start"
+              :class="
+                ui.isDark
+                  ? 'bg-slate-800/40 border border-slate-700'
+                  : 'bg-amber-50 border border-amber-100'
+              "
+            >
+              <span class="text-xl">🤖</span>
+              <div class="flex flex-col">
+                <p
+                  class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500 mb-1"
+                >
+                  Financial Advisor
+                </p>
+                <p
+                  class="text-xs leading-relaxed font-bold italic"
+                  :class="ui.isDark ? 'text-slate-200' : 'text-slate-700'"
+                >
+                  "{{ (transactionStore as any).advisorMessage }}"
+                </p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4">
+              <div
+                v-for="(data, key) in [
+                { label: 'Needs (Pokok 50%)', val: (transactionStore as any).financialAnalysis.needs, color: 'bg-blue-500' },
+                { label: 'Wants (Jajan 30%)', val: (transactionStore as any).financialAnalysis.wants, color: 'bg-amber-500' },
+                { label: 'Savings (Simpan 20%)', val: (transactionStore as any).financialAnalysis.savings, color: 'bg-emerald-500' }
+              ]"
+                :key="key"
+                class="space-y-1.5"
+              >
+                <div class="flex justify-between items-end">
+                  <span
+                    class="text-[9px] font-black uppercase tracking-wider text-slate-500"
+                    >{{ data.label }}</span
+                  >
+                  <span
+                    class="text-[10px] font-black"
+                    :class="
+                      data.val.percentage > 100
+                        ? 'text-rose-500'
+                        : ui.isDark
+                        ? 'text-slate-300'
+                        : 'text-slate-700'
+                    "
+                  >
+                    {{ transactionStore.formatIDR(data.val.total) }} /
+                    {{ transactionStore.formatIDR(data.val.limit) }}
+                  </span>
+                </div>
+                <div
+                  class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full rounded-full transition-all duration-1000 ease-out"
+                    :class="[
+                      data.val.percentage > 100
+                        ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]'
+                        : data.color,
+                    ]"
+                    :style="{ width: `${Math.min(data.val.percentage, 100)}%` }"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div v-else class="py-4 text-center text-xs italic text-slate-500">
+        <div
+          v-else
+          class="py-4 text-center text-xs italic text-slate-500 flex flex-col items-center gap-2"
+        >
+          <UIcon name="i-heroicons-circle-stack" class="text-2xl opacity-20" />
           Belum ada data {{ isIncomeMode ? "income" : "spending" }} bulan ini.
         </div>
       </div>
@@ -176,7 +254,6 @@ const isIncomeMode = ref(false);
 const isEditingBudget = ref(false);
 const isGuidanceVisible = ref(false);
 const displayBudget = ref("");
-const tempBudget = ref(transactionStore.monthlyBudget);
 
 const currentTotal = computed(() =>
   isIncomeMode.value ? transactionStore.totalIncomes : transactionStore.totalExpenses
@@ -194,7 +271,7 @@ const getPercentage = (cat: any) => {
     : transactionStore.getCategoryPercentage(cat);
 };
 
-const startEdit = async () => {
+const startEdit = () => {
   displayBudget.value = transactionStore.monthlyBudget.toLocaleString("id-ID");
   isEditingBudget.value = true;
   isGuidanceVisible.value = false;
@@ -203,17 +280,11 @@ const startEdit = async () => {
 const onInputBudget = (e: Event) => {
   const target = e.target as HTMLInputElement;
   let val = target.value.replace(/\D/g, "");
-
-  if (val) {
-    displayBudget.value = Number(val).toLocaleString("id-ID");
-  } else {
-    displayBudget.value = "";
-  }
+  displayBudget.value = val ? Number(val).toLocaleString("id-ID") : "";
 };
 
 const finishEdit = () => {
   const cleanValue = parseInt(displayBudget.value.replace(/\./g, "")) || 0;
-
   if (cleanValue !== transactionStore.monthlyBudget) {
     transactionStore.setBudget(cleanValue);
   }
@@ -251,13 +322,6 @@ onMounted(() => {
     }
   }, 1000);
 });
-
-watch(
-  () => transactionStore.monthlyBudget,
-  (newVal) => {
-    tempBudget.value = newVal;
-  }
-);
 </script>
 
 <style scoped lang="scss">
@@ -271,7 +335,6 @@ watch(
     width: 0;
   }
 }
-
 .rounded-full {
   animation: grow 1s ease-out;
 }
@@ -280,15 +343,23 @@ watch(
 .fade-fast-leave-active {
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
-
 .fade-fast-enter-from,
 .fade-fast-leave-to {
   opacity: 0;
   transform: translateY(2px);
 }
 
-.card-wrapper {
-  padding: 0 15px;
-  width: 100%;
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 </style>

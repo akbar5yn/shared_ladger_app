@@ -1,99 +1,62 @@
 package com.example.app
 
-import android.os.Bundle
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.util.Log
-import com.getcapacitor.BridgeActivity
-import com.getcapacitor.Plugin
-import com.getcapacitor.PluginCall
-import com.getcapacitor.PluginMethod
-import com.getcapacitor.annotation.CapacitorPlugin
-import com.getcapacitor.JSObject
-import android.content.ComponentName 
 import android.app.NotificationManager
-import android.service.notification.NotificationListenerService
-import android.provider.Settings
-import android.os.PowerManager
+import android.content.*
 import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.os.PowerManager
+import android.provider.MediaStore
+import android.provider.Settings
+import android.service.notification.NotificationListenerService
+import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
+import com.getcapacitor.*
+import com.getcapacitor.annotation.CapacitorPlugin
 
-// 1. DEFINISIKAN PLUGIN DI SINI
+// 1. PLUGIN NOTIFICATION STORAGE
 @CapacitorPlugin(name = "NotificationStorage")
 class NotificationStoragePlugin : Plugin() {
+
     @PluginMethod
     fun getPendingNotifications(call: PluginCall) {
-        val sharedPref = context.getSharedPreferences("BankNotifications", Context.MODE_PRIVATE)
-        val data = sharedPref.getString("pending_list", "[]") ?: "[]"
+        val prefs = context.getSharedPreferences("BankNotifications", Context.MODE_PRIVATE)
+        val data = prefs.getString("pending_list", "[]") ?: "[]"
 
-        if (data == "[]" || data.isEmpty()) {
-            val ret = JSObject()
-            ret.put("data", "[]")
-            ret.put("count", 0)
-            return call.resolve(ret)
+        val ret = JSObject().apply {
+            put("data", data)
+            put("count", if (data == "[]" || data.isEmpty()) 0 else 1) // Simple count logic
         }
-        
-        val ret = JSObject()
-        ret.put("data", data)
 
-        sharedPref.edit().remove("pending_list").apply()
+        if (data != "[]" && data.isNotEmpty()) {
+            prefs.edit().remove("pending_list").apply()
+        }
         
         call.resolve(ret)
     }
+
     @PluginMethod
     fun exportData(call: PluginCall) {
-        val dataDariNuxt = call.getString("dataExport") ?: ""
-    
-        if (dataDariNuxt.isEmpty()) {
-            call.reject("Datanya kosong, kaga ada yang bisa di-export!")
-            return
-        }
+        val data = call.getString("dataExport") ?: ""
+        if (data.isEmpty()) return call.reject("Datanya kosong, kaga ada yang bisa di-export!")
 
-        val mainActivity = activity as? MainActivity
-        if (mainActivity != null) {
-            mainActivity.exportToDownloads(dataDariNuxt)
+        (activity as? MainActivity)?.let {
+            it.exportToDownloads(data)
             call.resolve()
-        } else {
-            call.reject("MainActivity tidak ditemukan!")
-        }
+        } ?: call.reject("MainActivity tidak ditemukan!")
     }
 
     @PluginMethod
     fun triggerImport(call: PluginCall) {
-        val mainActivity = activity as? MainActivity
-        mainActivity?.openFilePicker()
+        (activity as? MainActivity)?.openFilePicker()
         call.resolve()
     }
 }
 
+// 2. MAIN ACTIVITY
 class MainActivity : BridgeActivity() {
 
-    companion object {
-        var instance: MainActivity? = null
-    }
-
-    private fun isNotificationServiceRunning(): Boolean {
-        val contentResolver = contentResolver
-        val enabledNotificationListeners = Settings.Secure.getString(contentResolver, "enabled_notification_listeners")
-        val packageName = packageName
-        return enabledNotificationListeners != null && enabledNotificationListeners.contains(packageName)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        try {
-            val componentName = ComponentName(this, AppNotificationListener::class.java)
-            
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                NotificationListenerService.requestRebind(componentName)
-                Log.d("APP_NOTIF", "🔄 Meminta Re-bind Servis (onResume)...")
-            }
-        } catch (e: Exception) {
-            Log.e("APP_NOTIF", "❌ Gagal rebind: ${e.message}")
-        }
-    }
+    private val tag = "APP_NOTIF"
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -101,58 +64,76 @@ class MainActivity : BridgeActivity() {
             val text = intent?.getStringExtra("text") ?: ""
             val pkg = intent?.getStringExtra("pkg") ?: ""
 
-            // 2. GUNAKAN CustomEvent detail BIAR LEBIH STANDAR JS
+            // Mengirim data ke WebView via CustomEvent
             val jsCode = """
-                (function() {
-                    console.log('Native: Mengirim data ke WebView...');
-                    var ev = new CustomEvent('onBankNotification', { 
-                        detail: { title: "$title", text: "$text", pkg: "$pkg" } 
-                    });
-                    window.dispatchEvent(ev);
-                })();
+                window.dispatchEvent(new CustomEvent('onBankNotification', { 
+                    detail: { title: "$title", text: "$text", pkg: "$pkg" } 
+                }));
             """.trimIndent()
             
             bridge?.webView?.evaluateJavascript(jsCode, null)
         }
     }
 
-    private fun checkBatteryOptimization() {
-        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-        val packageName = packageName
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-                Log.d("APP_NOTIF", "⚠️ Baterai dibatasi, minta izin White-list...")
-                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-                intent.data = Uri.parse("package:$packageName")
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                startActivity(intent)
+    private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            try {
+                val content = contentResolver.openInputStream(it)?.bufferedReader()?.use { it.readText() }
+                content?.let { rawData ->
+                    val escaped = rawData.replace("\\", "\\\\")
+                        .replace("'", "\\'")
+                        .replace("\n", "\\n")
+                        .replace("\r", "")
+
+                    val jsCode = "setTimeout(() => window.dispatchEvent(new CustomEvent('onImportData', { detail: { data: '$escaped' } })), 200)"
+                    bridge?.webView?.evaluateJavascript(jsCode, null)
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "❌ Gagal baca file: ${e.message}")
             }
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // REGISTER HARUS SEBELUM SUPER ONCREATE
         registerPlugin(NotificationStoragePlugin::class.java)
         super.onCreate(savedInstanceState)
-        instance = this
-
+        
         checkBatteryOptimization()
+        checkNotificationPermission()
+    }
 
-        if (!isNotificationServiceRunning()) {
-            Log.d("APP_NOTIF", "⚠️ Izin belum aktif, melempar user ke Settings")
-            val intent = Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-        } else {
-            Log.d("APP_NOTIF", "✅ Izin aman, servis siap tempur")
+    private fun checkNotificationPermission() {
+        val enabled = Settings.Secure.getString(contentResolver, "enabled_notification_listeners")
+        if (enabled == null || !enabled.contains(packageName)) {
+            Log.d(tag, "⚠️ Izin belum aktif, ke Settings...")
+            startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
+        }
+    }
+
+    private fun checkBatteryOptimization() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = Uri.parse("package:$packageName")
+                })
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val component = ComponentName(this, AppNotificationListener::class.java)
+            NotificationListenerService.requestRebind(component)
+            Log.d(tag, "🔄 Meminta Re-bind Servis...")
         }
     }
 
     override fun onStart() {
         super.onStart()
         val filter = IntentFilter("com.example.app.NOTIFICATION_RECEIVED")
-        
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
         } else {
             registerReceiver(receiver, filter)
@@ -161,76 +142,28 @@ class MainActivity : BridgeActivity() {
 
     override fun onStop() {
         super.onStop()
-        try {
-            unregisterReceiver(receiver)
-        } catch (e: Exception) {
-            Log.e("APP_NOTIF", "Error unregistering receiver: ${e.message}")
-        }
+        try { unregisterReceiver(receiver) } catch (e: Exception) { }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        if (instance == this) {
-            instance = null
-        }
-    }
-
-    private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: android.net.Uri? ->
-        uri?.let {
-            try {
-                val content = contentResolver.openInputStream(it)?.bufferedReader()?.use { it.readText() }
-                if (content != null) {
-                    // ESCAPING YANG LEBIH AMAN
-                    val escapedContent = content
-                        .replace("\\", "\\\\")
-                        .replace("'", "\\'")
-                        .replace("\n", "\\n")
-                        .replace("\r", "")
-
-                    // KASIH DELAY DIKIT BIAR WEBVIEW SIAP
-                    val jsCode = """
-                        setTimeout(function() {
-                            console.log('Native: Mengirim data import...');
-                            window.dispatchEvent(new CustomEvent('onImportData', { 
-                                detail: { data: '$escapedContent' } 
-                            }));
-                        }, 200);
-                    """.trimIndent()
-                    
-                    bridge?.webView?.evaluateJavascript(jsCode, null)
-                }
-            } catch (e: Exception) {
-                Log.e("APP_NOTIF", "❌ Gagal baca file: ${e.message}")
-            }
-        }
-    }
-
-    fun openFilePicker() {
-        filePickerLauncher.launch("application/json") // Cuma bolehin JSON buat import
-    }
+    fun openFilePicker() = filePickerLauncher.launch("application/json")
 
     fun exportToDownloads(data: String) {
         val isJson = data.trim().startsWith("{") || data.trim().startsWith("[")
         val ext = if (isJson) "json" else "csv"
         val mime = if (isJson) "application/json" else "text/csv"
-        val prefix = if (isJson) "BACKUP" else "LAPORAN"
+        val fileName = "${if (isJson) "BACKUP" else "LAPORAN"}_Ledger_${System.currentTimeMillis()}.$ext"
 
-        val fileName = "${prefix}_Ledger_${System.currentTimeMillis()}.$ext"
-
-        val contentValues = android.content.ContentValues().apply {
-            put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-            put(android.provider.MediaStore.MediaColumns.MIME_TYPE, mime)
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, "Download/SharedLedger")
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+            put(MediaStore.MediaColumns.MIME_TYPE, mime)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "Download/SharedLedger")
             }
         }
 
-        val uri = contentResolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
-        uri?.let {
-            contentResolver.openOutputStream(it)?.use { stream ->
-                stream.write(data.toByteArray())
-            }
-            Log.d("APP_NOTIF", "✅ File Berhasil: $fileName")
+        contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)?.let { uri ->
+            contentResolver.openOutputStream(uri)?.use { it.write(data.toByteArray()) }
+            Log.d(tag, "✅ File Berhasil: $fileName")
         }
     }
 }

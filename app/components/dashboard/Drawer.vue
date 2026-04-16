@@ -1,5 +1,6 @@
 <template>
   <section
+    id="drawer"
     class="fixed inset-x-0 bottom-0 rounded-t-[40px] shadow-[0_-20px_50px_rgba(0,0,0,0.2)] flex flex-col overflow-hidden transition-all"
     :style="{
       top: isMounted ? `${currentTop}px` : '100vh',
@@ -67,6 +68,31 @@
           >
             💸 Test TF Keluar
           </button>
+          <button
+            @click="
+              transactionStore.addTransaction({
+                title: 'Transaksi QRIS Berhasil',
+                text: 'Transaksi di SPBU PERTAMINA COCO sebesar Rp50.000 berhasil.',
+                pkg: 'Aladin',
+              })
+            "
+            class="bg-slate-600 text-white text-[10px] px-3 py-2 rounded-xl shadow-lg active:scale-95"
+          >
+            ⛽ Test Isi Bensin
+          </button>
+
+          <button
+            @click="
+              transactionStore.addTransaction({
+                title: 'Transaksi Berhasil',
+                text: 'Pembayaran wifi Biznet Home bulan ini Rp350.000 sukses.',
+                pkg: 'Aladin',
+              })
+            "
+            class="bg-yellow-600 text-white text-[10px] px-3 py-2 rounded-xl shadow-lg active:scale-95"
+          >
+            ⚡ Test Tagihan
+          </button>
         </div> -->
         <div class="flex items-center justify-between mt-8 mb-4">
           <h2
@@ -127,35 +153,56 @@
             </p>
 
             <div
-              class="flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-slate-700"
+              class="flex flex-col gap-2 pt-2 border-t border-gray-100 dark:border-slate-700"
             >
-              <button
-                v-for="opt in getOptions(
-                  getSmartMetadata(item.text, item.metadata || 'DEFAULT')
-                )"
-                :key="opt.value"
-                @click="
-                  opt.value === 'Lainnya'
-                    ? openEditModal(item)
-                    : transactionStore.confirmTransaction(item.id, opt.value, opt.type)
-                "
-                :class="opt.color(ui.isDark)"
-                class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg font-bold text-[10px] active:scale-95 transition-all shadow-sm"
+              <div class="flex items-center gap-2">
+                <button
+                  v-for="opt in getDynamicOptions(item).slice(0, 2)"
+                  :key="opt.value"
+                  @click="
+                    opt.value === 'Lainnya'
+                      ? openEditModal(item)
+                      : transactionStore.confirmTransaction(item.id, opt.value, opt.type)
+                  "
+                  :class="opt.color(ui.isDark)"
+                  class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg font-bold text-[10px] active:scale-95 transition-all shadow-sm"
+                >
+                  <UIcon v-if="opt.icon" :name="opt.icon" class="shrink-0" />
+                  <span class="truncate">{{ opt.label }}</span>
+                </button>
+
+                <button
+                  @click="transactionStore.removePending(item.id)"
+                  class="w-9 py-2 flex items-center justify-center rounded-lg active:scale-95"
+                  :class="
+                    ui.isDark
+                      ? 'bg-gray-300 text-slate-900'
+                      : 'dark:bg-slate-700 text-gray-400'
+                  "
+                >
+                  <UIcon name="i-heroicons-trash" />
+                </button>
+              </div>
+
+              <div
+                v-if="getDynamicOptions(item).length > 2"
+                class="grid grid-cols-3 gap-2"
               >
-                <UIcon v-if="opt.icon" :name="opt.icon" class="text-xs shrink-0" />
-                <span>{{ opt.label }}</span>
-              </button>
-              <button
-                @click="transactionStore.removePending(item.id)"
-                class="w-9 py-2 flex items-center justify-center rounded-lg active:scale-95"
-                :class="
-                  ui.isDark
-                    ? 'bg-gray-300 text-slate-900'
-                    : 'dark:bg-slate-700 text-gray-400'
-                "
-              >
-                <UIcon name="i-heroicons-trash" />
-              </button>
+                <button
+                  v-for="opt in getDynamicOptions(item).slice(2)"
+                  :key="opt.value"
+                  @click="
+                    opt.value === 'Lainnya'
+                      ? openEditModal(item)
+                      : transactionStore.confirmTransaction(item.id, opt.value, opt.type)
+                  "
+                  :class="opt.color(ui.isDark)"
+                  class="flex items-center justify-center gap-1.5 py-2 rounded-lg font-bold text-[10px] active:scale-95 transition-all shadow-sm"
+                >
+                  <UIcon v-if="opt.icon" :name="opt.icon" class="shrink-0" />
+                  <span class="truncate">{{ opt.label }}</span>
+                </button>
+              </div>
             </div>
           </div>
           <div
@@ -232,7 +279,7 @@
               </div>
             </div>
 
-            <UField
+            <UFormField
               label="Masukan catatan disini"
               class="font-bold"
               :class="ui.isDark ? 'text-slate-200' : 'text-slate-700'"
@@ -251,7 +298,7 @@
               `,
                 }"
               />
-            </UField>
+            </UFormField>
           </div>
 
           <template #footer>
@@ -302,20 +349,27 @@
           </template>
 
           <div class="space-y-6">
-            <UField label="Ubah Catatan / Alasan">
+            <UFormField
+              label="Ubah Catatan / Alasan"
+              :ui="{
+                label: `font-bold transition-colors duration-500 ${
+                  ui.isDark ? 'text-slate-100' : 'text-slate-600'
+                }`,
+              }"
+            >
               <UInput
                 v-model="manualNote"
                 icon="i-heroicons-pencil-square"
                 class="w-full"
                 :ui="{
                   base: `
-                    h-8 rounded-xl text-md border border-gray-800 focus:border-gray-500 
+                    h-10 rounded-xl text-md border border-gray-800 focus:border-gray-500 
                     ring-0 focus:ring-0 transition-all focus-visible:ring-0
                     ${ui.isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}
                   `,
                 }"
               />
-            </UField>
+            </UFormField>
 
             <div class="mt-2">
               <p
@@ -327,18 +381,22 @@
 
               <div class="grid grid-cols-2 gap-2">
                 <button
-                  v-for="opt in [
-                    ...(categoryOptions.INCOME_AUTO || []),
-                    ...(categoryOptions.QRIS_AUTO || []),
-                    ...(categoryOptions.TRANSFER_MANUAL || []),
-                  ].filter((o) => o.value !== 'Lainnya')"
-                  :key="opt.value"
-                  @click="handleFinalConfirm(opt)"
-                  :class="opt.color(ui.isDark)"
+                  v-for="cat in Object.values(ICON_LIBRARY)"
+                  :key="cat.label"
+                  @click="
+                    handleFinalConfirm({
+                      label: cat.label,
+                      value: cat.label,
+                      icon: cat.icon,
+                      type: selectedItemForEdit?.type || 'expense', // Ikuti tipe transaksi aslinya
+                      color: createColorFn(cat.color),
+                    })
+                  "
+                  :class="createColorFn(cat.color)(ui.isDark)"
                   class="flex items-center gap-2 p-3 rounded-xl font-bold text-xs active:scale-95 transition-all border border-transparent hover:border-current"
                 >
-                  <UIcon :name="opt.icon ?? ''" />
-                  {{ opt.label }}
+                  <UIcon :name="cat.icon" />
+                  {{ cat.label }}
                 </button>
               </div>
             </div>
@@ -353,17 +411,48 @@
 import { useUIStore } from "~/stores/ui";
 import { useTransactionStore } from "~/stores/useTransactionStore";
 import type { TTransactionCategory, TTransactionMetadata } from "~/types/INotification";
-import { Ocr } from "@jcesarmobile/capacitor-ocr";
-import { FilePicker } from "@capawesome/capacitor-file-picker";
+import { useDrawerUI } from "~/composables/drawer/useDrawerUI";
+import { useDrawerActions } from "~/composables/drawer/useDrawerActions";
 
 /**
- * 1. INITIALIZATION & STORES
+ * // ANCHOR 1. INITIALIZATION & STORES
  */
 const transactionStore = useTransactionStore();
 const ui = useUIStore();
+const route = useRoute();
 
 /**
- * 2. INTERFACES & CONFIGURATIONS
+ * // ANCHOR 2. INITIALIZATION Compose
+ */
+
+const {
+  currentTop,
+  isDragging,
+  isMounted,
+  onTouchStart,
+  onTouchMove,
+  onTouchEnd,
+  updatePositions,
+  initialHeight,
+  isSpendingLocked,
+  initObserver,
+} = useDrawerUI();
+
+const {
+  confirmAndSave,
+  handleFinalConfirm,
+  openEditModal,
+  uploadReceipt,
+  manualNote,
+  isEditModalOpen,
+  isOcrModalOpen,
+  isSaving,
+  ocrTempData,
+  selectedItemForEdit,
+} = useDrawerActions();
+
+/**
+ * ANCHOR 3. INTERFACES & CONFIGURATIONS
  */
 interface ICategoryOption {
   label: string;
@@ -373,371 +462,153 @@ interface ICategoryOption {
   color: (isDark: boolean) => string;
 }
 
-const categoryOptions: Record<string, ICategoryOption[]> = {
-  INCOME_AUTO: [
-    {
-      label: "Gaji",
-      icon: "i-heroicons-banknotes",
-      value: "Gaji/Income",
-      type: "income",
-      color: (isDark) =>
-        isDark
-          ? "bg-emerald-500/20 text-emerald-400"
-          : "bg-emerald-500/10 text-emerald-600",
-    },
-    {
-      label: "Nabung",
-      icon: "i-heroicons-building-library",
-      value: "Tabungan",
-      type: "income",
-      color: (isDark) =>
-        isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-500/10 text-blue-600",
-    },
-    {
-      label: "Lainnya",
-      icon: "i-heroicons-ellipsis-horizontal-circle",
-      value: "Lainnya",
-      type: "income",
-      color: (isDark) =>
-        isDark ? "bg-slate-500/20 text-slate-400" : "bg-slate-500/10 text-slate-600",
-    },
-  ],
-  QRIS_AUTO: [
-    {
-      label: "Makan",
-      icon: "i-heroicons-cake",
-      value: "Makan/Minum",
-      type: "expense",
-      color: (isDark) =>
-        isDark ? "bg-amber-200 text-black" : "bg-amber-200/40 text-amber-600",
-    },
-    {
-      label: "Jajan",
-      icon: "i-heroicons-ticket",
-      value: "Jajan",
-      type: "expense",
-      color: (isDark) =>
-        isDark ? "bg-amber-500 text-black" : "bg-amber-500/30 text-amber-600",
-    },
-    {
-      label: "Belanja",
-      icon: "i-heroicons-shopping-bag",
-      value: "Belanja",
-      type: "expense",
-      color: (isDark) =>
-        isDark ? "bg-teal-500 text-black" : "bg-teal-500/10 text-teal-600",
-    },
-    {
-      label: "Lainnya",
-      icon: "i-heroicons-ellipsis-horizontal-circle",
-      value: "Lainnya",
-      type: "expense",
-      color: (isDark) =>
-        isDark ? "bg-slate-500/20 text-slate-400" : "bg-slate-500/10 text-slate-600",
-    },
-  ],
-  TRANSFER_MANUAL: [
-    {
-      label: "Transfer",
-      icon: "i-heroicons-paper-airplane",
-      value: "Transfer",
-      type: "expense",
-      color: (isDark) =>
-        isDark ? "bg-emerald-500 text-black" : "bg-emerald-300/30 text-emerald-600",
-    },
-    {
-      label: "Tagihan",
-      icon: "i-heroicons-credit-card",
-      value: "Cicilan/Tagihan",
-      type: "expense",
-      color: (isDark) =>
-        isDark ? "bg-red-400 text-black" : "bg-red-400/20 text-red-600",
-    },
-    {
-      label: "Invest",
-      icon: "i-heroicons-chart-bar-square",
-      value: "Investasi",
-      type: "expense",
-      color: (isDark) =>
-        isDark ? "bg-indigo-500 text-black" : "bg-indigo-500/20 text-indigo-600",
-    },
-    {
-      label: "Lainnya",
-      icon: "i-heroicons-ellipsis-horizontal-circle",
-      value: "Lainnya",
-      type: "expense",
-      color: (isDark) =>
-        isDark ? "bg-slate-500/20 text-slate-400" : "bg-slate-500/10 text-slate-600",
-    },
-  ],
-  DEFAULT: [
-    {
-      label: "Lainnya",
-      icon: "i-heroicons-ellipsis-horizontal-circle",
-      value: "Lainnya",
-      type: "expense",
-      color: (isDark) =>
-        isDark ? "bg-slate-700 text-slate-300" : "bg-slate-500/10 text-slate-600",
-    },
-  ],
-};
+// const categoryOptions: Record<string, ICategoryOption[]> = {
+//   INCOME_AUTO: [
+//     {
+//       label: "Gaji",
+//       icon: "i-heroicons-banknotes",
+//       value: "Gaji/Income",
+//       type: "income",
+//       color: (isDark) =>
+//         isDark
+//           ? "bg-emerald-500/20 text-emerald-400"
+//           : "bg-emerald-500/10 text-emerald-600",
+//     },
+//   ],
+//   QRIS_AUTO: [
+//     {
+//       label: "Makan",
+//       icon: "i-heroicons-cake",
+//       value: "Makan/Minum",
+//       type: "expense",
+//       color: (isDark) =>
+//         isDark ? "bg-amber-200 text-black" : "bg-amber-200/40 text-amber-600",
+//     },
+//   ],
+//   TRANSFER_MANUAL: [
+//     {
+//       label: "Transfer",
+//       icon: "i-heroicons-paper-airplane",
+//       value: "Transfer",
+//       type: "expense",
+//       color: (isDark) =>
+//         isDark ? "bg-emerald-500 text-black" : "bg-emerald-300/30 text-emerald-600",
+//     },
+//   ],
+//   DEFAULT: [
+//     {
+//       label: "Lainnya",
+//       icon: "i-heroicons-ellipsis-horizontal-circle",
+//       value: "Lainnya",
+//       type: "expense",
+//       color: (isDark) =>
+//         isDark ? "bg-slate-700 text-slate-300" : "bg-slate-500/10 text-slate-600",
+//     },
+//   ],
+// };
 
 /**
- * 3. REACTIVE STATES
+ * ANCHOR 4. HELPER FUNCTIONS
  */
-// UI Drawer States
-const currentTop = ref(500);
-const isDragging = ref(false);
-const isMounted = ref(false);
-const isSpendingLocked = ref<boolean>(false);
-const startY = ref(0);
-const startTop = ref(0);
-const limits = reactive({ min: 80, max: 500 });
-const initialHeight = ref(0);
-let globalObserver: ResizeObserver | null = null;
 
-// Modal & Temp Data States
-const isOcrModalOpen = ref(false);
-const isSaving = ref(false);
-const isEditModalOpen = ref(false);
-const selectedItemForEdit = ref<any>(null);
-const manualNote = ref("");
-
-const ocrTempData = ref({
-  amount: 0,
-  note: "",
-  timestamp: Date.now(),
-  personName: "",
-  metadata: "UNCLEAR" as TTransactionMetadata,
-  isIncome: false,
-});
-
-/**
- * 4. HELPER FUNCTIONS
- */
-const getOptions = (metadata: string) => {
-  return (
-    categoryOptions[metadata as keyof typeof categoryOptions] || categoryOptions.DEFAULT
-  );
-};
-
-const getSmartMetadata = (text: string, currentMetadata: string): string => {
-  const lowerText = text.toLowerCase();
-  if (lowerText.match(/makan|warung|resto|bakso|mie|kopi|coffee|cafe|food/))
-    return "QRIS_AUTO";
-  if (lowerText.match(/listrik|pdam|wifi|indihome|bpjs|asuransi|cicilan|transfer/))
-    return "TRANSFER_MANUAL";
-  return currentMetadata;
-};
-
-/**
- * 5. CORE ACTIONS (OCR & TRANSACTION)
- */
-const uploadReceipt = async () => {
-  try {
-    const result = await FilePicker.pickFiles({ types: ["image/png", "image/jpeg"] });
-    if (!result.files.length) return;
-
-    const { results } = await Ocr.process({ image: result.files[0]?.path! });
-    const fullText = results.map((r) => r.text).join("\n");
-
-    // Extract Amount
-    const amountMatch = fullText.match(/(?:Jumlah Transfer|Rp)\s*[:.]?\s*([\d.,]+)/i);
-    let cleanAmount = 0;
-    if (amountMatch && amountMatch[1]) {
-      const rawAmount = String(amountMatch[1]).split(",")[0];
-      if (rawAmount) cleanAmount = parseInt(rawAmount.replace(/[.\s]/g, "")) || 0;
-    }
-
-    // Extract Name
-    const nameMatch = fullText.match(/Tujuan\s+([A-Z\s]+?)\s+(?:Dari|Metode)/i);
-    const personName = nameMatch?.[1]?.trim() ?? "Transfer Dana";
-
-    // Extract Timestamp
-    let transactionTimestamp = Date.now();
-    const dateMatch = fullText.match(
-      /(\d{1,2})\s+([A-Za-z]+)\s+(\d{4}),\s+(\d{2}:\d{2})/
-    );
-
-    if (dateMatch) {
-      const [_, day, monthStr, year, time] = dateMatch;
-      const months: Record<string, string> = {
-        Jan: "01",
-        Feb: "02",
-        Mar: "03",
-        Apr: "04",
-        Mei: "05",
-        Jun: "06",
-        Jul: "07",
-        Agu: "08",
-        Sep: "09",
-        Okt: "10",
-        Nov: "11",
-        Des: "12",
-      };
-
-      if (monthStr) {
-        const month = months[monthStr.substring(0, 3)] || "01";
-        const isoDate = `${year}-${month}-${day?.padStart(2, "0")}T${time}:00`;
-        const parsedDate = new Date(isoDate);
-        if (!isNaN(parsedDate.getTime())) transactionTimestamp = parsedDate.getTime();
-      }
-    }
-
-    // Determine Metadata
-    const isIncome = fullText.toLowerCase().includes("masuk");
-    let metadata: TTransactionMetadata = "UNCLEAR";
-    if (
-      fullText.toLowerCase().includes("bi fast") ||
-      fullText.toLowerCase().includes("transfer")
-    ) {
-      metadata = "TRANSFER_MANUAL";
-    } else if (isIncome) {
-      metadata = "INCOME_AUTO";
-    } else if (fullText.toLowerCase().includes("qris")) {
-      metadata = "QRIS_AUTO";
-    }
-
-    // Prepare Temp Data & Show Modal
-    ocrTempData.value = {
-      amount: cleanAmount,
-      note: `Transfer ke ${personName}`,
-      timestamp: transactionTimestamp,
-      personName,
-      metadata,
-      isIncome,
+const createColorFn = (colorKey: string) => {
+  return (isDark: boolean): string => {
+    // Mapping style manual lu yang legendaris
+    const styleMap: Record<string, { dark: string; light: string }> = {
+      "emerald-income": {
+        dark: "bg-emerald-500/20 text-emerald-400",
+        light: "bg-emerald-500/10 text-emerald-600",
+      },
+      "amber-makan": {
+        dark: "bg-amber-200 text-black",
+        light: "bg-amber-200/40 text-amber-600",
+      },
+      "amber-jajan": {
+        dark: "bg-amber-500 text-black",
+        light: "bg-amber-500/30 text-amber-600",
+      },
+      "teal-belanja": {
+        dark: "bg-teal-500 text-black",
+        light: "bg-teal-500/10 text-teal-600",
+      },
+      "blue-transfer": {
+        dark: "bg-emerald-500 text-black", // Lu tadi di style lama pake emerald buat TF kan?
+        light: "bg-emerald-300/30 text-emerald-600",
+      },
+      "red-bill": {
+        dark: "bg-red-400 text-black",
+        light: "bg-red-400/20 text-red-600",
+      },
+      "indigo-invest": {
+        dark: "bg-indigo-500 text-black",
+        light: "bg-indigo-500/20 text-indigo-600",
+      },
+      "slate-transport": {
+        dark: "bg-slate-700 text-slate-300",
+        light: "bg-slate-500/10 text-slate-600",
+      },
     };
-    isOcrModalOpen.value = true;
-  } catch (e) {
-    console.error("Error Scan:", e);
-  }
-};
 
-const confirmAndSave = async () => {
-  isSaving.value = true;
-  const { amount, note, timestamp, personName, metadata, isIncome } = ocrTempData.value;
-  const metadataIconMap: Record<TTransactionMetadata, string> = {
-    INCOME_AUTO: "i-heroicons-arrow-down-circle",
-    QRIS_AUTO: "i-heroicons-qr-code",
-    TRANSFER_MANUAL: "i-heroicons-paper-airplane",
-    UNCLEAR: "i-heroicons-question-mark-circle",
+    const style =
+      styleMap[colorKey] ||
+      (styleMap["slate-transport"] as { dark: string; light: string });
+    return isDark ? style.dark : style.light;
   };
+};
+const getDynamicOptions = (item: any): ICategoryOption[] => {
+  const text = item.text.toLowerCase();
+  const isIncome = item.type === "income";
+  const match = getSmartVisuals(text);
 
-  await transactionStore.addTransaction({
-    title: isIncome ? `Terima dari ${personName}` : `Transfer`,
-    text: note,
-    amount: Number(amount),
-    metadata: metadata,
-    pkg: "OCR",
-    timestamp: timestamp,
-    icon: metadataIconMap[metadata],
+  const finalOptions: ICategoryOption[] = [];
+
+  // 1. Rekomendasi Utama (Pake createColorFn level atas)
+  if (match) {
+    finalOptions.push({
+      label: match.label,
+      icon: match.icon,
+      value: match.label as TTransactionCategory,
+      type: isIncome ? "income" : "expense",
+      color: createColorFn(match.color), // Manggil fungsi yang pake styleMap
+    });
+  }
+
+  // 2. Fallback / Defaults
+  const fallbackKeys = isIncome ? ["salary", "transfer"] : ["food", "grocery"];
+
+  fallbackKeys.forEach((key) => {
+    const d = ICON_LIBRARY[key];
+    // Pastikan tidak duplikat dengan rekomendasi utama
+    if (d && finalOptions.length < 3 && (!match || d.label !== match.label)) {
+      finalOptions.push({
+        label: d.label,
+        icon: d.icon,
+        value: d.label as TTransactionCategory,
+        type: isIncome ? "income" : "expense",
+        color: createColorFn(d.color),
+      });
+    }
   });
 
-  isSaving.value = false;
-  isOcrModalOpen.value = false;
-};
+  // 3. Tombol Lainnya
+  finalOptions.push({
+    label: "Lainnya",
+    icon: "i-heroicons-ellipsis-horizontal-circle",
+    value: "Lainnya",
+    type: isIncome ? "income" : "expense",
+    color: (isDark: boolean): string =>
+      isDark
+        ? "bg-slate-800 text-slate-300 border border-slate-700"
+        : "bg-slate-100 text-slate-600 border border-slate-200",
+  });
 
-const openEditModal = (item: any) => {
-  selectedItemForEdit.value = item;
-  manualNote.value = item.text;
-  isEditModalOpen.value = true;
-};
-
-const handleFinalConfirm = (opt: any) => {
-  if (!selectedItemForEdit.value) return;
-  selectedItemForEdit.value.text = manualNote.value;
-  transactionStore.confirmTransaction(
-    selectedItemForEdit.value.id,
-    opt.value as TTransactionCategory,
-    opt.type
-  );
-  isEditModalOpen.value = false;
+  return finalOptions;
 };
 
 /**
- * 6. UI & DRAWER LOGIC
+ * ANCHOR 5. WATCHERS & LIFECYCLE
  */
-const updatePositions = () => {
-  const h = initialHeight.value || window.innerHeight;
-  const headerEl = document.getElementById("main-header");
-  const mainSlot = document.getElementById("main-slot");
-  const navWrapper = document.getElementById("navigation-wrapper");
-  const contentContainer = document.getElementById("content-container");
-  const cursorGrab = document.getElementById("cursor-grab");
 
-  if (headerEl) limits.min = headerEl.getBoundingClientRect().bottom + 10;
-
-  let safeZone = h - 100;
-  if (navWrapper) {
-    const bottomInset = 16;
-    const drawerHandleHeight = cursorGrab?.getBoundingClientRect().height ?? 0;
-    safeZone = window.innerHeight - drawerHandleHeight - bottomInset;
-  }
-
-  if (mainSlot) {
-    const spendingBottom = Math.floor(mainSlot.getBoundingClientRect().bottom);
-    limits.max = spendingBottom > safeZone ? safeZone : spendingBottom;
-
-    if (spendingBottom && navWrapper && cursorGrab && contentContainer) {
-      const navHeight = navWrapper.getBoundingClientRect().height;
-      const cursorGrabH = cursorGrab.getBoundingClientRect().height;
-      const stopTop = h - (navHeight + cursorGrabH);
-
-      if (spendingBottom >= stopTop) {
-        limits.max = stopTop;
-        if (!isSpendingLocked.value) {
-          const maxHeight = stopTop - contentContainer.getBoundingClientRect().top;
-          contentContainer.style.maxHeight = `${maxHeight}px`;
-          contentContainer.style.overflow = "scroll";
-          isSpendingLocked.value = true;
-        }
-      } else {
-        if (isSpendingLocked.value) {
-          mainSlot.style.maxHeight = "";
-          mainSlot.style.overflow = "";
-          isSpendingLocked.value = false;
-        }
-      }
-    }
-  }
-  currentTop.value = limits.max;
-};
-
-const onTouchStart = (e: TouchEvent) => {
-  const touch = e.touches[0];
-  if (!touch) return;
-  isDragging.value = true;
-  startY.value = touch.clientY;
-  startTop.value = currentTop.value;
-};
-
-const onTouchMove = (e: TouchEvent) => {
-  if (!isDragging.value) return;
-  const touch = e.touches[0];
-  if (!touch) return;
-  const deltaY = touch.clientY - startY.value;
-  const newTop = startTop.value + deltaY;
-  if (newTop >= limits.min && newTop <= limits.max) currentTop.value = newTop;
-};
-
-const onTouchEnd = () => {
-  isDragging.value = false;
-  const mid = (limits.min + limits.max) / 2;
-  currentTop.value = currentTop.value < mid ? limits.min : limits.max;
-};
-
-const initObserver = () => {
-  if (globalObserver) globalObserver.disconnect();
-  const mainSlot = document.getElementById("main-slot");
-  if (mainSlot) {
-    globalObserver = new ResizeObserver(() => updatePositions());
-    globalObserver.observe(mainSlot);
-  }
-};
-
-/**
- * 7. WATCHERS & LIFECYCLE
- */
 watch(
   () => ui.isPageLoading,
   async (loading) => {
@@ -748,6 +619,13 @@ watch(
         initObserver();
       }, 500);
     }
+  }
+);
+
+watch(
+  () => route.fullPath,
+  async () => {
+    isSpendingLocked.value = false;
   }
 );
 

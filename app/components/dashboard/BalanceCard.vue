@@ -40,9 +40,7 @@
               class="text-xl font-bold transition-colors duration-700"
               :class="ui.isDark ? 'text-white' : 'text-slate-900'"
             >
-              {{
-                transactionStore.formatIDR(transactionStore.remainingBalance)
-              }}
+              {{ transactionStore.formatIDR(transactionStore.remainingBalance) }}
             </p>
 
             <template #content>
@@ -57,25 +55,19 @@
               >
                 <template #header>
                   <div class="flex items-center justify-between">
-                    <h3
-                      class="text-base font-bold text-slate-900 dark:text-white"
-                    >
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white">
                       Update Saldo Manual
                     </h3>
                   </div>
                 </template>
 
                 <div class="space-y-4">
-                  <p
-                    class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed"
-                  >
-                    Masukkan nominal untuk menambah saldo utama mu saat ini.
+                  <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Sesuaikan saldo sistem dengan saldo riil di dompet/rekening lu
+                    sekarang.
                   </p>
 
-                  <UFieldGroup
-                    label="Nominal Pemasukan (Rp)"
-                    class="font-medium text-slate-700 dark:text-slate-200"
-                  >
+                  <UFieldGroup class="font-medium text-slate-700 dark:text-slate-200">
                     <UInput
                       v-model="displayAmount"
                       type="text"
@@ -84,7 +76,8 @@
                       icon="i-heroicons-banknotes"
                       class="w-full"
                       :ui="{
-                        base: 'bg-white dark:bg-gray-200/50 border text-sm font-black text-slate-900 ring-0 focus:ring-0 focus-visible:ring-0 font-medium',
+                        base:
+                          'bg-white dark:bg-gray-200/50 border text-sm font-black text-slate-900 ring-0 focus:ring-0 focus-visible:ring-0 font-medium',
                       }"
                       autofocus
                     />
@@ -135,31 +128,33 @@
 </template>
 
 <script setup lang="ts">
-import { useUIStore } from '~/stores/ui'
-import { useTransactionStore } from '~/stores/useTransactionStore'
-const ui = useUIStore()
-const transactionStore = useTransactionStore()
-const isOpen = ref(false)
-const manualAmount = ref<number | null>(null)
+import { useUIStore } from "~/stores/ui";
+import { useTransactionStore } from "~/stores/useTransactionStore";
+const ui = useUIStore();
+const transactionStore = useTransactionStore();
+const isOpen = ref(false);
+const manualAmount = ref<number>(0);
+
+watch(isOpen, (newVal) => {
+  if (newVal) {
+    manualAmount.value = transactionStore.actualBalance;
+  }
+});
 
 const displayAmount = computed({
   get: () => {
-    if (!manualAmount.value || manualAmount.value === 0) return ''
-    return manualAmount.value.toLocaleString('id-ID')
+    return manualAmount.value.toLocaleString("id-ID");
   },
   set: (newValue) => {
-    const numberValue = parseInt(newValue.replace(/\D/g, ''))
-    manualAmount.value = isNaN(numberValue) ? 0 : numberValue
+    const numberValue = parseInt(newValue.replace(/\D/g, ""));
+    manualAmount.value = isNaN(numberValue) ? 0 : numberValue;
   },
-})
+});
 
 const handleUpdateBalance = () => {
-  if (manualAmount.value && manualAmount.value > 0) {
-    transactionStore.addManualIncome(Number(manualAmount.value))
-    manualAmount.value = null
-    isOpen.value = false
-  }
-}
+  transactionStore.updateActualBalance(Number(manualAmount.value));
+  isOpen.value = false;
+};
 </script>
 
 <style lang="scss" scoped>

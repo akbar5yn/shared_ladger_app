@@ -406,10 +406,18 @@ const formattedDisplayAmount = computed(() => {
 
 // Perbandingan pengeluaran vs saldo
 const expenseRatio = computed(() => {
-  const balance = transactionStore.actualBalance || 0;
-  const expense = transactionStore.totalExpenses || 0;
-  if (balance === 0) return expense > 0 ? 100 : 0;
-  return (expense / balance) * 100;
+  const balance = Number(transactionStore.actualBalance) || 0;
+  const history = transactionStore.history || [];
+
+  const expenseItems = history.filter((t) => t.type === "expense");
+  const totalExpense = expenseItems.reduce(
+    (acc, curr) => acc + (Number(curr.amount) || 0),
+    0
+  );
+
+  const totalMoneyPool = balance + totalExpense;
+
+  return totalMoneyPool > 0 ? (totalExpense / totalMoneyPool) * 100 : 0;
 });
 
 // Pengelompokan riwayat berdasarkan tanggal
@@ -491,7 +499,18 @@ const handleUpdateHistory = async () => {
 
   const index = history.findIndex((t) => t.id === editTempData.value.id);
   if (index !== -1 && history[index]) {
-    history[index].amount = Number(editTempData.value.amount);
+    const oldItem = history[index];
+    const newAmount = Number(editTempData.value.amount);
+
+    if (oldItem.type === "income") {
+      transactionStore.actualBalance =
+        transactionStore.actualBalance - oldItem.amount + newAmount;
+    } else {
+      transactionStore.actualBalance =
+        transactionStore.actualBalance + oldItem.amount - newAmount;
+    }
+
+    history[index].amount = newAmount;
     history[index].text = editTempData.value.text;
 
     const rawDate = editTempData.value.date;
@@ -502,6 +521,7 @@ const handleUpdateHistory = async () => {
       history[index].date = rawDate;
     }
     history[index].time = editTempData.value.time;
+
     await transactionStore.saveToDisk();
     isEditHistoryModalOpen.value = false;
   }
@@ -510,11 +530,25 @@ const handleUpdateHistory = async () => {
 const handleDeleteHistory = async () => {
   if (confirm("Yakin mau hapus riwayat ini, Cok?")) {
     if (!transactionStore) return;
-    transactionStore.history = transactionStore.history.filter(
-      (t) => t.id !== editTempData.value.id
+
+    const itemToDelete = transactionStore.history.find(
+      (t) => t.id === editTempData.value.id
     );
-    await transactionStore.saveToDisk();
-    isEditHistoryModalOpen.value = false;
+
+    if (itemToDelete) {
+      if (itemToDelete.type === "income") {
+        transactionStore.actualBalance -= Number(itemToDelete.amount);
+      } else {
+        transactionStore.actualBalance += Number(itemToDelete.amount);
+      }
+
+      transactionStore.history = transactionStore.history.filter(
+        (t) => t.id !== editTempData.value.id
+      );
+
+      await transactionStore.saveToDisk();
+      isEditHistoryModalOpen.value = false;
+    }
   }
 };
 
