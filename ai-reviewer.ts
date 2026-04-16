@@ -24,7 +24,18 @@ async function runReview(): Promise<void> {
 
     // 1. Ambil Diff
     const diff = spawnSync("git", ["diff", "--cached"], { encoding: "utf-8" }).stdout;
-    if (!diff || diff.trim() === "") process.exit(0);
+    const fullDiff = spawnSync("git", ["diff", "--cached"], { encoding: "utf-8" }).stdout;
+    if (!fullDiff || fullDiff.trim() === "") process.exit(0);
+
+    const changedFiles = diff.split("\n").filter(f => f.trim() !== "");
+    const isOnlyAISystemChanged = changedFiles.every(file =>
+        file.includes("ai-reviewer.ts") || file.includes("ai-rules/")
+    );
+
+    if (isOnlyAISystemChanged) {
+        console.log("✅ [Amnesti AI] Hanya file sistem AI yang berubah. Skip review.");
+        process.exit(0);
+    }
 
     // 2. Load Semua Aturan dari Folder ai-rules
     const rulesDir = path.join(process.cwd(), "ai-rules");
@@ -68,7 +79,10 @@ async function runReview(): Promise<void> {
         - Jika ada satu saja aturan yang dilanggar parah, akhiri dengan kata "FAILED".
         - Jika semua aman, balas hanya dengan "PASSED".
         - PENTING: Jika perubahan terjadi pada file 'ai-reviewer.ts' atau file di dalam folder 'ai-rules/', BERIKAN STATUS [STATUS_PASSED] SECARA OTOMATIS untuk file tersebut. Jangan mereview logika sistem AI Guard itu sendiri.`,
-
+                options: {
+                    temperature: 0,
+                    num_ctx: 4096
+                },
                 stream: false,
             }),
         });
@@ -76,19 +90,17 @@ async function runReview(): Promise<void> {
         const result = (await response.json()) as OllamaResponse;
         const feedback = result.response.trim();
 
-        const isPassed = feedback.toUpperCase().includes("PASSED");
-        const isFailed = feedback.toUpperCase().includes("FAILED");
-
-        if (isFailed) {
+        if (feedback.includes("[[RESULT_FAILED]]")) {
             console.error("\n❌ COMMIT DITOLAK OLEH AI GUARD:\n");
-            console.log(feedback);
+            console.log(feedback.replace("[[RESULT_FAILED]]", "").trim());
             console.log("\n--------------------------------------------------");
             process.exit(1);
-        } else if (isPassed) {
+        } else if (feedback.includes("[[RESULT_PASSED]]")) {
             console.log("✅ AI Approved! Kode Anda 'Masterpiece'.");
             process.exit(0);
         } else {
-            console.warn("⚠️ Respons AI tidak jelas, tetapi tidak ada tanda FAILED. Melanjutkan...");
+            console.log("🤖 AI Feedback:\n", feedback);
+            if (feedback.toUpperCase().includes("FAILED")) process.exit(1);
             process.exit(0);
         }
     } catch (err: any) {
