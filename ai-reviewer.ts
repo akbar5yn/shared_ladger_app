@@ -1,3 +1,6 @@
+/// <reference types="@types/node" />
+/// <reference types="@types/bun" />
+
 import { spawnSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 import path from "node:path";
