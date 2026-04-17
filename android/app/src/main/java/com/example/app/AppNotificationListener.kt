@@ -26,6 +26,12 @@ class AppNotificationListener : NotificationListenerService() {
     // Helper biar SharedPreferences gak ngetik panjang terus
     private val prefs by lazy { getSharedPreferences("BankNotifications", Context.MODE_PRIVATE) }
 
+    override fun onCreate() {
+        super.onCreate()
+        Log.d(tag, "🔥 Servis onCreate: Memulai sistem pemantauan...")
+        showForegroundNotification()
+    }
+
     private fun getDailyCount(): Int {
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         val savedDate = prefs.getString("last_count_date", "")
@@ -44,23 +50,31 @@ class AppNotificationListener : NotificationListenerService() {
     }
 
     private fun showForegroundNotification() {
-        val count = getDailyCount()
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        
-        val contentText = if (count > 0) "$count transaksi berhasil dicatat hari ini" 
-                          else "Siap mencatat transaksi otomatis"
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, "Kurir Service", NotificationManager.IMPORTANCE_HIGH)
+            val channel = NotificationChannel(
+                channelId, 
+                "Layanan Pencatat Transaksi", 
+                NotificationManager.IMPORTANCE_HIGH 
+            ).apply {
+                description = "Menjaga aplikasi tetap aktif untuk mencatat notifikasi bank"
+                setShowBadge(false)
+            }
             manager.createNotificationChannel(channel)
         }
+
+        // 2. Build Notifikasi
+        val count = getDailyCount()
+        val contentText = if (count > 0) "$count transaksi tercatat hari ini" else "Siap mencatat transaksi otomatis"
 
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Shared Ledger Aktif")
             .setContentText(contentText)
             .setSmallIcon(android.R.drawable.stat_notify_sync)
             .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setAutoCancel(false)
+            .setPriority(NotificationCompat.PRIORITY_HIGH) 
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .build()
 
         try {
@@ -75,7 +89,7 @@ class AppNotificationListener : NotificationListenerService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(tag, "✅ KONEK COK! Servis Listener sudah aktif.")
+        Log.d(tag, "✅ onStartCommand: Servis dipicu sistem.")
         showForegroundNotification()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             requestRebind(ComponentName(this, AppNotificationListener::class.java))
@@ -104,6 +118,7 @@ class AppNotificationListener : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
+        Log.d(tag, "🚀 Listener TERHUBUNG: Android mengizinkan akses notifikasi.")
         showForegroundNotification()
         Handler(Looper.getMainLooper()).postDelayed({ scanActiveNotifications() }, 1000)
     }
@@ -152,6 +167,8 @@ class AppNotificationListener : NotificationListenerService() {
             val text = extras.getCharSequence("android.text")?.toString() ?: ""
             val postTime = sbn.postTime
 
+            Log.i(tag, "🔔 NOTIF MASUK -> Pkg: $pkg | Title: $title | Text: $text")
+
             val isSummary = (sbn.notification.flags and android.app.Notification.FLAG_GROUP_SUMMARY) != 0
             if (title.isEmpty() || text.isEmpty() || isSummary) return
             if (text == lastText && postTime == lastPostTime) return
@@ -159,7 +176,7 @@ class AppNotificationListener : NotificationListenerService() {
             lastText = text
             lastPostTime = postTime
 
-            if (pkg.contains("aladin") || pkg.contains("android.bank")) {
+            if (pkg.contains("aladin") || pkg.contains("bca")) {
                 saveToGudang(title, text, pkg, postTime)
                 incrementDailyCount()
                 showForegroundNotification()
@@ -175,6 +192,30 @@ class AppNotificationListener : NotificationListenerService() {
             }
         } finally {
             if (wl.isHeld) wl.release()
+        }
+    }
+
+    override fun onNotificationRemoved(sbn: StatusBarNotification?, rankingMap: RankingMap?, reason: Int) {
+        super.onNotificationRemoved(sbn, rankingMap, reason)
+        
+        // Cek apakah yang dihapus adalah notifikasi kita (ID 1)
+        if (sbn?.id == 1) {
+            val reasonText = when (reason) {
+                REASON_CLICK -> "Diklik user"
+                REASON_CANCEL -> "Dihapus/Swipe user"
+                REASON_CANCEL_ALL -> "Clear All"
+                REASON_ERROR -> "Error Sistem"
+                REASON_PACKAGE_CHANGED -> "App Update/Changed"
+                REASON_USER_STOPPED -> "User paksa stop"
+                REASON_PROFILE_TURNED_OFF -> "Profil dimatikan"
+                REASON_CHANNEL_BANNED -> "Channel diblokir"
+                else -> "Alasan kode: $reason"
+            }
+            Log.e(tag, "⚠️ NOTIFIKASI KITA DIHAPUS! Alasan: $reasonText")
+            
+            // Pancing lagi biar muncul!
+            showForegroundNotification()
+            Log.d(tag, "🔄 Mencoba membangkitkan kembali notifikasi...")
         }
     }
 }
