@@ -2,5 +2,8 @@
     "vue3snippets.enable-compile-vue-file-on-did-save-code": true,
     "java.project.sourcePaths": [
         "node_modules/@capacitor/android"
-    ]
+    ],
+    "cSpell.enabledFileTypes": {
+        "typescript": false
+    }
 }
