@@ -93,7 +93,12 @@ async function runReview(): Promise<void> {
             }),
         });
 
-        const result = (await response.json()) as OllamaResponse;
+        const result = await response.json() as OllamaResponse;
+
+        if (!result || !result.response) {
+            throw new Error("Respon dari Ollama kosong atau tidak valid");
+        }
+
         const feedback = result.response.trim();
 
         if (feedback.includes("[[RESULT_FAILED]]")) {
