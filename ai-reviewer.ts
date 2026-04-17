@@ -68,7 +68,7 @@ async function runReview(): Promise<void> {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                model: "qwen2.5-coder:3b",
+                model: "qwen2.5-coder:7b",
                 prompt: `Tugasmu adalah mereview potongan kode (GIT DIFF) berdasarkan daftar aturan di bawah ini.
         
         ATURAN ARSITEKTUR:
@@ -86,8 +86,8 @@ async function runReview(): Promise<void> {
         - Jangan berasumsi ada kode yang tidak tertulis. Review hanya apa yang ada di dalam diff.`,
 
                 options: {
-                    temperature: 0,
-                    num_ctx: 4096
+                    temperature: 0.1, // Sedikit lebih kreatif tapi tetap konsisten
+                    num_ctx: 8192 // Perlebar konteks biar dia baca semua aturannya
                 },
                 stream: false,
             }),
