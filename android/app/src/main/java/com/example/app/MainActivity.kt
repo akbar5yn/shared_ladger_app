@@ -60,8 +60,8 @@ class MainActivity : BridgeActivity() {
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            val title = intent?.getStringExtra("title") ?: ""
-            val text = intent?.getStringExtra("text") ?: ""
+            val title = (intent?.getStringExtra("title") ?: "").replace("\"", "\\\"")
+            val text = (intent?.getStringExtra("text") ?: "").replace("\"", "\\\"")
             val pkg = intent?.getStringExtra("pkg") ?: ""
 
             // Mengirim data ke WebView via CustomEvent
@@ -97,16 +97,16 @@ class MainActivity : BridgeActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         registerPlugin(NotificationStoragePlugin::class.java)
         super.onCreate(savedInstanceState)
-        val serviceIntent = Intent(this, AppNotificationListener::class.java)
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(serviceIntent)
-            } else {
-                startService(serviceIntent)
-            }
-        } catch (e: Exception) {
-            Log.e(tag, "Gagal pancing servis di onCreate: ${e.message}")
-        }
+        // val serviceIntent = Intent(this, AppNotificationListener::class.java)
+        // try {
+        //     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        //         startForegroundService(serviceIntent)
+        //     } else {
+        //         startService(serviceIntent)
+        //     }
+        // } catch (e: Exception) {
+        //     Log.e(tag, "Gagal pancing servis di onCreate: ${e.message}")
+        // }
         checkBatteryOptimization()
         checkNotificationPermission()
     }
@@ -139,12 +139,16 @@ class MainActivity : BridgeActivity() {
     override fun onResume() {
         super.onResume()
         val component = ComponentName(this, AppNotificationListener::class.java)
+        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        //     NotificationListenerService.requestRebind(component)
+        //     Log.d(tag, "🔄 Meminta Re-bind Servis...")
+        // }
         val isRunning = isNotificationRunning()
         if(!isRunning){
             Log.d(tag, "⚠️ Servis mati, mencoba menghidupkan kembali...")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 NotificationListenerService.requestRebind(component)
-                Log.d(tag, "🔄 Meminta Re-bind Servis...")
+                Log.d(tag, "🔄 Meminta Re-bind Servis...aa")
             }
             val intent = Intent(this, AppNotificationListener::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -152,6 +156,8 @@ class MainActivity : BridgeActivity() {
             } else {
                 startService(intent)
             }
+        } else {
+            Log.d(tag, "✅ Servis sudah berjalan, tidak perlu rebind. $isRunning")
         }
     }
 

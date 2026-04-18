@@ -15,11 +15,12 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import java.text.SimpleDateFormat
 import java.util.*
+import android.app.Notification
 
 class AppNotificationListener : NotificationListenerService() {
 
     private val tag = "APP_NOTIF"
-    private val channelId = "notif_service"
+    private val channelId = "notif_service_v1"
     private var lastText: String = ""
     private var lastPostTime: Long = 0
 
@@ -30,6 +31,41 @@ class AppNotificationListener : NotificationListenerService() {
         super.onCreate()
         Log.d(tag, "🔥 Servis onCreate: Memulai sistem pemantauan...")
         showForegroundNotification()
+    }
+
+    private fun processAndBroadcast(sbn: StatusBarNotification) {
+        val postTime = sbn.postTime
+        val existingData = prefs.getString("pending_list", "[]") ?: "[]"
+        
+        if (existingData.contains(postTime.toString())) {
+            Log.d(tag, "⏭️ Notif lama diabaikan (Sudah pernah dicatat): $postTime")
+            return 
+        }
+
+        val extras = sbn.notification.extras ?: return
+        val title = extras.getCharSequence("android.title")?.toString() ?: "No Title"
+        val text = extras.getCharSequence("android.text")?.toString() ?: ""
+        val pkg = sbn.packageName ?: ""
+
+        if (text == lastText && postTime == lastPostTime) return
+        lastText = text
+        lastPostTime = postTime
+
+        saveToGudang(title, text, pkg, postTime)
+        
+        incrementDailyCount()
+        showForegroundNotification()
+
+        Handler(Looper.getMainLooper()).post {
+            val intent = Intent("com.example.app.NOTIFICATION_RECEIVED").apply {
+                putExtra("title", title)
+                putExtra("text", text)
+                putExtra("pkg", pkg)
+                putExtra("timestamp", postTime)
+            }
+            sendBroadcast(intent)
+        }
+        Log.i(tag, "✅ Berhasil Proses: $pkg")
     }
 
     private fun getDailyCount(): Int {
@@ -50,7 +86,19 @@ class AppNotificationListener : NotificationListenerService() {
     }
 
     private fun showForegroundNotification() {
+        Log.d(tag, "Membangun notifikasi foreground...")
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (!manager.areNotificationsEnabled()) {
+                Log.e(tag, "❌ ERROR: Notifikasi aplikasi Shared Ledger di-BLOCK total oleh sistem!")
+            }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = manager.getNotificationChannel(channelId)
+            if (channel != null && channel.importance == NotificationManager.IMPORTANCE_NONE) {
+                Log.e(tag, "❌ ERROR: Channel $channelId di-set ke SILENT/NONE oleh user!")
+            }
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId, 
@@ -58,7 +106,7 @@ class AppNotificationListener : NotificationListenerService() {
                 NotificationManager.IMPORTANCE_HIGH 
             ).apply {
                 description = "Menjaga aplikasi tetap aktif untuk mencatat notifikasi bank"
-                setShowBadge(false)
+                setShowBadge(true)
             }
             manager.createNotificationChannel(channel)
         }
@@ -79,66 +127,13 @@ class AppNotificationListener : NotificationListenerService() {
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+                startForeground(250201, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
             } else {
-                startForeground(1, notification)
+                startForeground(250201, notification)
             }
         } catch (e: Exception) {
             Log.e(tag, "Gagal start foreground: ${e.message}")
         }
-    }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(tag, "✅ onStartCommand: Servis dipicu sistem.")
-        showForegroundNotification()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            requestRebind(ComponentName(this, AppNotificationListener::class.java))
-        }
-        return START_STICKY
-    }
-
-    private fun scanActiveNotifications() {
-        try {
-            activeNotifications?.forEach { sbn ->
-                val pkg = sbn.packageName ?: ""
-                if (pkg == packageName) return@forEach
-
-                val extras = sbn.notification.extras ?: return@forEach
-                val title = extras.getCharSequence("android.title")?.toString() ?: "No Title"
-                val text = extras.getCharSequence("android.text")?.toString() ?: ""
-                
-                if (pkg.contains("aladin") || pkg.contains("android.bank")) {
-                    saveToGudang(title, text, pkg, sbn.postTime)
-                }
-            }
-        } catch (e: Exception) {
-            Log.e(tag, "❌ Gagal nyapu jagat: ${e.message}")
-        }
-    }
-
-    override fun onListenerConnected() {
-        super.onListenerConnected()
-        Log.d(tag, "🚀 Listener TERHUBUNG: Android mengizinkan akses notifikasi.")
-        showForegroundNotification()
-        Handler(Looper.getMainLooper()).postDelayed({ scanActiveNotifications() }, 1000)
-    }
-
-    override fun onTaskRemoved(rootIntent: Intent?) {
-        val restartIntent = Intent(applicationContext, this.javaClass).apply { `package` = packageName }
-        val pendingIntent = PendingIntent.getService(this, 1, restartIntent, PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE)
-        
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000, pendingIntent)
-        
-        super.onTaskRemoved(rootIntent)
-    }
-
-    override fun onDestroy() {
-        Log.d(tag, "💀 Servis di-kill sistem! Mencoba restart...")
-        sendBroadcast(Intent("com.example.app.RESTART_SERVICE").apply {
-            setClass(this@AppNotificationListener, BootReceiver::class.java)
-        })
-        super.onDestroy()
     }
 
     private fun saveToGudang(title: String, text: String, pkg: String, postTime: Long) {
@@ -154,52 +149,82 @@ class AppNotificationListener : NotificationListenerService() {
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
+        val pkg = sbn.packageName ?: return
+        Log.d(tag, "🔔 Ada Notif Masuk dari: $pkg")
+        if (!(pkg.contains("aladin") || pkg.contains("bca"))) {
+            return 
+        }
+
+        if ((sbn.notification.flags and Notification.FLAG_GROUP_SUMMARY) != 0) return
+
         val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
         val wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "App:NotifWakeLock")
-        wl.acquire(5000)
+        wl.acquire(3000)
 
         try {
-            val pkg = sbn.packageName ?: return
-            if (pkg == packageName) return
-
-            val extras = sbn.notification.extras ?: return
-            val title = extras.getCharSequence("android.title")?.toString() ?: "No Title"
-            val text = extras.getCharSequence("android.text")?.toString() ?: ""
-            val postTime = sbn.postTime
-
-            Log.i(tag, "🔔 NOTIF MASUK -> Pkg: $pkg | Title: $title | Text: $text")
-
-            val isSummary = (sbn.notification.flags and android.app.Notification.FLAG_GROUP_SUMMARY) != 0
-            if (title.isEmpty() || text.isEmpty() || isSummary) return
-            if (text == lastText && postTime == lastPostTime) return
-
-            lastText = text
-            lastPostTime = postTime
-
-            if (pkg.contains("aladin") || pkg.contains("bca")) {
-                saveToGudang(title, text, pkg, postTime)
-                incrementDailyCount()
-                showForegroundNotification()
-
-                Handler(Looper.getMainLooper()).post {
-                    sendBroadcast(Intent("com.example.app.NOTIFICATION_RECEIVED").apply {
-                        putExtra("title", title)
-                        putExtra("text", text)
-                        putExtra("pkg", pkg)
-                        putExtra("timestamp", postTime)
-                    })
-                }
-            }
+            processAndBroadcast(sbn)
         } finally {
             if (wl.isHeld) wl.release()
         }
+    }
+
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        Log.d(tag, "🚀 Listener TERHUBUNG: Android mengizinkan akses notifikasi.")
+        showForegroundNotification()
+        // Handler(Looper.getMainLooper()).postDelayed({ scanActiveNotifications() }, 1000)
+        Handler(Looper.getMainLooper()).postDelayed({
+            activeNotifications?.forEach { sbn ->
+                val pkg = sbn.packageName ?: ""
+                if (pkg.contains("bca") || pkg.contains("aladin")) {
+                    processAndBroadcast(sbn)
+                }
+            }
+        }, 1000)
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        Log.d(tag, "⚠️ Aplikasi di-terminate! Mengirim sinyal restart via Broadcast...")
+
+        val intent = Intent("com.example.app.RESTART_SERVICE").apply {
+            setClassName(packageName, "$packageName.BootReceiver")
+        }
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            this, 
+            250201, 
+            intent, 
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                System.currentTimeMillis() + 2000, 
+                pendingIntent
+            )
+        }
+        
+        super.onTaskRemoved(rootIntent)
+    }
+
+    override fun onDestroy() {
+        Log.d(tag, "💀 Servis di-kill sistem! Mencoba restart...")
+        sendBroadcast(Intent("com.example.app.RESTART_SERVICE").apply {
+            setClass(this@AppNotificationListener, BootReceiver::class.java)
+        })
+        super.onDestroy()
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification?, rankingMap: RankingMap?, reason: Int) {
         super.onNotificationRemoved(sbn, rankingMap, reason)
         
         // Cek apakah yang dihapus adalah notifikasi kita (ID 1)
-        if (sbn?.id == 1) {
+        if (sbn?.id == 250201) {
             val reasonText = when (reason) {
                 REASON_CLICK -> "Diklik user"
                 REASON_CANCEL -> "Dihapus/Swipe user"
