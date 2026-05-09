@@ -8,55 +8,62 @@
       </p>
     </section>
     <section class="h-fit flex flex-col">
-      <form @submit.prevent="emit('submit')" class="flex flex-col gap-2 text-black">
-        <label for="email" class="text-[13px] font-medium px-[5px]">E-mail</label>
+      <form class="flex flex-col gap-2 text-black" @submit.prevent="emit('submit')">
+        <div class="flex items-center justify-between px-[5px] capitalize">
+          <label for="email" class="text-[13px] font-medium px-[5px]">E-mail</label>
+          <Transition name="error" mode="out-in">
+            <span v-if="authStore.errors?.Email" key="email-error" class="text-red-400 text-xs">
+              {{ authStore.errors.Email[0] }}
+            </span>
+
+            <span
+v-else-if="authStore.errors?.Format && formEmail?.trim().length > 0" key="format-error"
+              class="text-red-400 text-xs">
+              {{ authStore.errors.Format[0] }}
+            </span>
+          </Transition>
+        </div>
+
         <div class="border-animasi-wrapper w-full">
           <div class="flex items-center gap-1 field-container">
             <UIcon name="i-heroicons-envelope" class="h-5 w-5 text-gray-500 shrink-0" />
             <input
-              id="email"
-              type="text"
-              v-model="formEmail"
-              class="w-full text-sm"
-              autocomplete="off"
-              placeholder="Masukan alamat email anda"
-            />
+id="email" v-model="formEmail" type="text" class="w-full text-sm"
+              autocomplete="off" placeholder="Masukan alamat email anda" @input="authStore.clearField('Email')" >
           </div>
         </div>
-        <label for="password" class="text-[13px] font-medium px-[5px] mt-2"
-          >Password</label
-        >
+        <div class="flex items-center justify-between px-[5px] capitalize">
+          <label for="password" class="text-[13px] font-medium px-[5px] mt-2">Password</label>
+          <Transition name="error">
+            <div v-if="authStore.errors?.Password">
+              <p class="text-red-400 text-xs">
+                {{ authStore.errors.Password[0] }}
+              </p>
+            </div>
+          </Transition>
+        </div>
         <div class="border-animasi-wrapper w-full">
           <div class="flex items-center gap-1 field-container">
-            <UIcon
-              name="i-heroicons-lock-closed"
-              class="h-5 w-5 text-gray-500 shrink-0"
-            />
+            <UIcon name="i-heroicons-lock-closed" class="h-5 w-5 text-gray-500 shrink-0" />
             <input
-              type="password"
-              v-model="formPassword"
-              id="password"
-              class="w-full text-sm"
-              autocomplete="off"
-              placeholder="Masukan kata sandi anda"
-            />
+id="password" v-model="formPassword" type="password" class="w-full text-sm" autocomplete="off"
+              placeholder="Masukan kata sandi anda" >
           </div>
         </div>
+
         <button
-          :disabled="isLoading"
-          type="submit"
+:disabled="isLoading" type="submit"
           class="bg-[#f9ab26] py-2 mt-4 text-black rounded-[10px] font-bold login-btn border border-black transition-all duration-300"
-          :class="{ 'bg-[#f9ac267a] text-gray-500': isLoading }"
-        >
+          :class="{ 'bg-[#f9ac267a] text-gray-500': isLoading }">
           <span v-if="isLoading" class="loading">Loading</span>
           <span v-else>Sign in</span>
         </button>
       </form>
     </section>
     <div class="flex items-center gap-2 justify-center text-gray-600">
-      <div class="h-[0.1px] w-[20%] bg-gray-600"></div>
+      <div class="h-[0.1px] w-[20%] bg-gray-600"/>
       <p class="text-gray-400">Or Log in with</p>
-      <div class="h-[0.1px] w-[20%] bg-gray-600"></div>
+      <div class="h-[0.1px] w-[20%] bg-gray-600"/>
     </div>
     <div class="flex gap-2 w-full justify-center">
       <div class="google-button-wrapper w-[50%]">
@@ -78,6 +85,8 @@
 </template>
 
 <script setup lang="ts">
+import { useAuthStore } from "~/stores/auth";
+const authStore = useAuthStore();
 const props = defineProps<{
   email: string;
   password: string;
@@ -96,3 +105,20 @@ const formPassword = computed({
   set: (value) => emit("update:password", value),
 });
 </script>
+
+<style scoped>
+.error-enter-active,
+.error-leave-active {
+  transition: all 0.2s ease;
+}
+
+.error-enter-from {
+  opacity: 0;
+  transform: translateX(6px);
+}
+
+.error-leave-to {
+  opacity: 0;
+  transform: translateX(6px);
+}
+</style>

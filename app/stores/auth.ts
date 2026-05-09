@@ -1,14 +1,15 @@
-import { defineStore } from "pinia";
-import type { IUser, ILoginResponse } from "~/types/IUser";
+import { defineStore } from 'pinia'
+import type { IUser, ILoginResponse } from '~/types/IUser'
 import { Preferences } from '@capacitor/preferences'
 
-export const useAuthStore = defineStore("auth", {
+export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null as IUser | null,
     isGuest: false,
     token: null as string | null,
     isLoggedIn: false,
-    hydrated: false
+    hydrated: false,
+    errors: null as Record<string, string[]> | null,
   }),
   getters: {
     userInfo: (state) => state.user,
@@ -23,38 +24,37 @@ export const useAuthStore = defineStore("auth", {
 
         await Preferences.set({
           key: 'auth_token',
-          value: data.token
+          value: data.token,
         })
         await Preferences.set({ key: 'is_guest', value: 'false' })
       }
     },
 
     async setGuestMode(status: boolean) {
-      this.isGuest = status;
-      this.isLoggedIn = false;
-      this.token = null;
-      this.hydrated = true;
+      this.isGuest = status
+      this.isLoggedIn = false
+      this.token = null
+      this.hydrated = true
 
       await Preferences.set({
         key: 'is_guest',
-        value: status.toString()
-      });
-      await Preferences.remove({ key: 'auth_token' });
+        value: status.toString(),
+      })
+      await Preferences.remove({ key: 'auth_token' })
     },
 
     async restoreSession() {
       // await appLog('[AUTH] restoreSession start')
 
       const { value } = await Preferences.get({ key: 'auth_token' })
-      const { value: guestStatus } = await Preferences.get({ key: 'is_guest' })
 
       // await appLog('[AUTH] token = ' + (value ? 'FOUND' : 'EMPTY'))
       // await appLog('[AUTH] isGuest = ' + guestStatus)
 
       if (!value) {
-        this.token = null;
-        this.isLoggedIn = false;
-        this.hydrated = true;
+        this.token = null
+        this.isLoggedIn = false
+        this.hydrated = true
         // return await appLog('Token empty, isGuest: ' + this.isGuest)
       }
       if (value) {
@@ -68,23 +68,32 @@ export const useAuthStore = defineStore("auth", {
     },
 
     async logout() {
-
       await Preferences.remove({ key: 'auth_token' })
       await Preferences.remove({ key: 'is_guest' })
       document.cookie = 'auth_session=; Max-Age=0; path=/;'
       this.hydrated = false
-      this.user = null;
-      this.token = null;
-      this.isLoggedIn = false;
+      this.user = null
+      this.token = null
+      this.isLoggedIn = false
+    },
+
+    setAuthError(error: { errors: Record<string, string[]> }) {
+      this.errors = error.errors
+    },
+
+    clearField(field: string) {
+      if (!this.errors) return
+      const { [field]: _, ...rest } = this.errors
+      this.errors = rest
     },
   },
   persist: {
     storage: piniaPluginPersistedstate.cookies({
       maxAge: 86400,
-      path: "/",
-      sameSite: "lax",
+      path: '/',
+      sameSite: 'lax',
     }),
     pick: ['user', 'token', 'isLoggedIn', 'isGuest'],
-    key: 'auth_session'
+    key: 'auth_session',
   },
-});
+})
