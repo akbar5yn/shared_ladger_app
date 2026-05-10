@@ -28,8 +28,8 @@ v-else-if="authStore.errors?.Format && formEmail?.trim().length > 0" key="format
           <div class="flex items-center gap-1 field-container">
             <UIcon name="i-heroicons-envelope" class="h-5 w-5 text-gray-500 shrink-0" />
             <input
-id="email" v-model="formEmail" type="text" class="w-full text-sm"
-              autocomplete="off" placeholder="Masukan alamat email anda" @input="authStore.clearField('Email')" >
+id="email" v-model="formEmail" type="text" class="w-full text-sm" autocomplete="off"
+              placeholder="Masukan alamat email anda" @input="authStore.clearField('Email')" >
           </div>
         </div>
         <div class="flex items-center justify-between px-[5px] capitalize">
@@ -61,9 +61,9 @@ id="password" v-model="formPassword" type="password" class="w-full text-sm" auto
       </form>
     </section>
     <div class="flex items-center gap-2 justify-center text-gray-600">
-      <div class="h-[0.1px] w-[20%] bg-gray-600"/>
+      <div class="h-[0.1px] w-[20%] bg-gray-600" />
       <p class="text-gray-400">Or Log in with</p>
-      <div class="h-[0.1px] w-[20%] bg-gray-600"/>
+      <div class="h-[0.1px] w-[20%] bg-gray-600" />
     </div>
     <div class="flex gap-2 w-full justify-center">
       <div class="google-button-wrapper w-[50%]">

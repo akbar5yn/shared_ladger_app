@@ -1,3 +1,4 @@
+import type { FetchError } from 'ofetch'
 import { loginService, type TCredentials } from '~/services/auth.service'
 import { useAuthStore } from '~/stores/auth'
 import type { TLoginResult } from '~/types/IUser'
@@ -11,25 +12,29 @@ export const useAuth = () => {
   const useLogin = async (credentials: TCredentials): Promise<TLoginResult> => {
     isLoading.value = true
 
-    const { data, error } = await loginService(credentials)
+    try {
+      const res = await loginService(credentials)
 
-    isLoading.value = false
+      isLoading.value = false
 
-    if (error) {
+      return {
+        success: res.success,
+        data: res.data,
+      }
+    } catch (error: unknown) {
+      const errData = (error as FetchError)?.data
+
+      isLoading.value = false
+
       return {
         success: false,
-        message: error.message || 'Login failed',
-        errors: error.errors || {
+        message: errData.message ?? 'Login failed',
+        errors: errData?.errors ?? {
           Format: [],
           Email: [],
           Password: [],
         },
       }
-    }
-
-    return {
-      success: true,
-      data: data!,
     }
   }
 
@@ -44,7 +49,12 @@ export const useAuth = () => {
       return
     }
 
-    await authStore.setLoginAction(res.data)
+    const loginData = res.data
+
+    console.log(JSON.stringify(res, null, 2))
+    console.log(JSON.stringify(loginData, null, 2))
+
+    await authStore.setLoginAction(res)
     await router.push('/dashboard')
 
     setTimeout(() => {

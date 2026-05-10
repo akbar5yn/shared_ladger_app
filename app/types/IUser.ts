@@ -1,17 +1,20 @@
 // interface/IUser.ts
 export interface IUser {
-  name: string
+  id: number
   email: string
-}
-
-export interface ILoginResponse {
-  token: string
-  user: IUser
+  password: string
+  name: string
+  monthlyBudget: number
+  actualBalance: number
+  createdAt: Date
 }
 
 export type TLoginSuccess = {
-  data: ILoginResponse
   success: true
+  data: {
+    token: string
+    user: IUser
+  }
 }
 
 export type TLoginFailed = {

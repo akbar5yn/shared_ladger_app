@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { IUser, ILoginResponse } from '~/types/IUser'
+import type { IUser, TLoginSuccess } from '~/types/IUser'
 import { Preferences } from '@capacitor/preferences'
 
 export const useAuthStore = defineStore('auth', {
@@ -15,16 +15,16 @@ export const useAuthStore = defineStore('auth', {
     userInfo: (state) => state.user,
   },
   actions: {
-    async setLoginAction(data: ILoginResponse) {
+    async setLoginAction(data: TLoginSuccess) {
       if (data) {
-        this.user = data.user
-        this.token = data.token
+        this.user = data.data.user
+        this.token = data.data.token
         this.isLoggedIn = true
         this.hydrated = true
 
         await Preferences.set({
           key: 'auth_token',
-          value: data.token,
+          value: data.data.token,
         })
         await Preferences.set({ key: 'is_guest', value: 'false' })
       }
