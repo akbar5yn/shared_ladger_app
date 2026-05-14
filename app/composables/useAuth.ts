@@ -49,11 +49,6 @@ export const useAuth = () => {
       return
     }
 
-    const loginData = res.data
-
-    console.log(JSON.stringify(res, null, 2))
-    console.log(JSON.stringify(loginData, null, 2))
-
     await authStore.setLoginAction(res)
     await router.push('/dashboard')
 
