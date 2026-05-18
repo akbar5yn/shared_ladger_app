@@ -142,7 +142,16 @@ class AppNotificationListener : NotificationListenerService() {
 
         val cleanTitle = title.replace("\"", "\\\"")
         val cleanText = text.replace("\"", "\\\"")
-        val newData = """{"title":"$cleanTitle","text":"$cleanText","pkg":"$pkg","time":$postTime}"""
+        val notifId = "$pkg-$postTime"
+        val newData = """
+            {
+                "id":"$notifId",
+                "title":"$cleanTitle",
+                "text":"$cleanText",
+                "pkg":"$pkg",
+                "time":$postTime
+            }
+        """.trimIndent()
         
         val updatedList = if (existingData == "[]") "[$newData]" else existingData.dropLast(1) + ",$newData]"
         prefs.edit().putString("pending_list", updatedList).apply()
@@ -151,9 +160,30 @@ class AppNotificationListener : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val pkg = sbn.packageName ?: return
         Log.d(tag, "🔔 Ada Notif Masuk dari: $pkg")
-        if (!(pkg.contains("aladin") || pkg.contains("bca"))) {
-            return 
+
+        val allowedApps = listOf(
+            "bca",
+            "aladin",
+            "telegram"
+        )
+
+        val isAllowed = allowedApps.any { keyword ->
+            pkg.contains(keyword, ignoreCase = true)
         }
+
+        // 🔥 LOG SEMUA NOTIF MASUK (DEBUG MODE)
+        Log.d(tag, "📦 INCOMING NOTIF:")
+        Log.d(tag, "   ➜ Package : $pkg")
+        Log.d(tag, "   ➜ Allowed  : $isAllowed")
+        Log.d(tag, "   ➜ Title    : ${sbn.notification.extras.getCharSequence("android.title")}")
+        Log.d(tag, "   ➜ Text     : ${sbn.notification.extras.getCharSequence("android.text")}")
+
+        if (!isAllowed) {
+            Log.d(tag, "⛔ FILTERED OUT: $pkg")
+            return
+        }
+
+        Log.d(tag, "✅ PASSED FILTER: $pkg")
 
         if ((sbn.notification.flags and Notification.FLAG_GROUP_SUMMARY) != 0) return
 

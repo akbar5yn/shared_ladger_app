@@ -13,6 +13,8 @@ import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import com.getcapacitor.*
 import com.getcapacitor.annotation.CapacitorPlugin
+import org.json.JSONArray
+import org.json.JSONObject
 
 // 1. PLUGIN NOTIFICATION STORAGE
 @CapacitorPlugin(name = "NotificationStorage")
@@ -51,6 +53,36 @@ class NotificationStoragePlugin : Plugin() {
         (activity as? MainActivity)?.openFilePicker()
         call.resolve()
     }
+
+    @PluginMethod
+    fun removePendingNotification(call: PluginCall) {
+        val id = call.getString("id")
+        val prefs = context.getSharedPreferences("BankNotifications", Context.MODE_PRIVATE)
+
+        if (id.isNullOrEmpty()) {
+            call.reject("ID is required")
+            return
+        }
+
+        val existingData = prefs.getString("pending_list", "[]") ?: "[]"
+
+        val jsonArray = JSONArray(existingData)
+        val newArray = JSONArray()
+
+        for (i in 0 until jsonArray.length()) {
+            val item = jsonArray.getJSONObject(i)
+
+            if (item.getString("id") != id) {
+                newArray.put(item)
+            }
+        }
+
+        prefs.edit()
+            .putString("pending_list", newArray.toString())
+            .apply()
+
+        call.resolve()
+    }
 }
 
 // 2. MAIN ACTIVITY
@@ -63,11 +95,13 @@ class MainActivity : BridgeActivity() {
             val title = (intent?.getStringExtra("title") ?: "").replace("\"", "\\\"")
             val text = (intent?.getStringExtra("text") ?: "").replace("\"", "\\\"")
             val pkg = intent?.getStringExtra("pkg") ?: ""
+            val postTime = intent?.getLongExtra("timestamp", 0L) ?: 0L
+            val id = "$pkg-$postTime"
 
             // Mengirim data ke WebView via CustomEvent
             val jsCode = """
                 window.dispatchEvent(new CustomEvent('onBankNotification', { 
-                    detail: { title: "$title", text: "$text", pkg: "$pkg" } 
+                    detail: { id: "$id", title: "$title", text: "$text", pkg: "$pkg" } 
                 }));
             """.trimIndent()
             
