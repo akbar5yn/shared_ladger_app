@@ -12,7 +12,7 @@ export const useAuthStore = defineStore('auth', {
     errors: null as Record<string, string[]> | null,
   }),
   getters: {
-    userInfo: (state) => state.user,
+    userInfo: (state) => state.user
   },
   actions: {
     async setLoginAction(data: TLoginSuccess) {

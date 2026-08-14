@@ -4,7 +4,6 @@ export interface IUser {
   email: string
   password: string
   name: string
-  monthlyBudget: number
   actualBalance: number
   createdAt: Date
 }

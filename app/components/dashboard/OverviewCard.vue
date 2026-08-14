@@ -1,37 +1,27 @@
 <template>
   <div class="card-wrapper">
     <div
-      id="content-container"
+id="content-container"
       class="card-container relative w-full rounded-3xl px-6 py-5 mb-6 border transition-all duration-700 no-scrollbar"
-      :class="
-        ui.isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100 shadow-sm'
-      "
-    >
+      :class="ui.isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100 shadow-sm'
+        ">
       <div class="flex justify-between items-center mb-1">
-        <span
-          :class="ui.isDark ? 'text-slate-400' : 'text-gray-500'"
-          class="text-xs font-medium tracking-wider"
-        >
-          {{ isIncomeMode ? "Income" : "Spending" }} Overview
+        <span :class="ui.isDark ? 'text-slate-400' : 'text-gray-500'" class="text-xs font-medium tracking-wider">
+          {{ isIncomeMode ? "Summary Income" : "Summary of Monthly " }}
         </span>
 
         <button
-          @click="isIncomeMode = !isIncomeMode"
-          class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all active:scale-95 justify-center"
+class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all active:scale-95 justify-center"
           style="min-width: 115px"
-          :class="
-            isIncomeMode
-              ? 'bg-emerald-500/10 text-emerald-500'
-              : 'bg-amber-500/10 text-amber-500'
-          "
-        >
+          :class="isIncomeMode
+            ? 'bg-emerald-500/10 text-emerald-500'
+            : 'bg-amber-500/10 text-amber-500'
+            " @click="isIncomeMode = !isIncomeMode">
           <UIcon
-            :name="
-              isIncomeMode
-                ? 'i-heroicons-arrow-trending-up'
-                : 'i-heroicons-arrow-trending-down'
-            "
-          />
+:name="isIncomeMode
+            ? 'i-heroicons-arrow-trending-up'
+            : 'i-heroicons-arrow-trending-down'
+            " />
           <span>Switch to {{ isIncomeMode ? "Spending" : "Income" }}</span>
         </button>
       </div>
@@ -39,202 +29,271 @@
       <div class="mt-1 flex flex-col gap-4">
         <div class="flex items-baseline gap-2">
           <h1
-            class="text-2xl font-bold tracking-tight transition-colors duration-500"
-            :class="[
-              isIncomeMode
-                ? 'text-emerald-500'
-                : ui.isDark
-                ? 'text-white'
-                : 'text-slate-900',
-            ]"
-          >
+class="text-2xl font-bold tracking-tight transition-colors duration-500" :class="[
+            isIncomeMode
+              ? 'text-emerald-500'
+              : ui.isDark
+                ? 'text-red-400'
+                : 'text-red-500',
+          ]">
             {{ transactionStore.formatIDR(currentTotal) }}
           </h1>
           <span
-            v-if="!isIncomeMode"
-            :class="ui.isDark ? 'text-slate-500' : 'text-gray-400'"
-            class="text-xs flex items-center gap-1"
-          >
-            From
+v-if="!isIncomeMode" :class="ui.isDark ? 'text-slate-400' : 'text-gray-400'"
+            class="text-xs flex items-center gap-1">
+            From your income
             <div class="relative flex items-center h-6">
               <Transition name="fade-fast" mode="out-in">
-                <div v-if="isEditingBudget" :key="'edit'" class="flex items-center gap-1">
-                  <span class="text-amber-500 font-bold text-[10px]">Rp</span>
-                  <input
-                    v-focus
-                    v-model="displayBudget"
-                    type="text"
-                    inputmode="numeric"
-                    @input="onInputBudget"
-                    @blur="finishEdit"
-                    @keyup.enter="finishEdit"
-                    class="w-24 bg-transparent border-b-2 border-amber-500 font-bold text-amber-500 outline-none p-0 h-6 transition-all"
-                    placeholder="0"
-                  />
-                </div>
-
-                <div
-                  v-else
-                  :key="'display'"
-                  @click.stop="startEdit"
-                  class="flex items-center gap-1.5 cursor-pointer group relative"
-                >
-                  <span class="font-bold hover:text-amber-500 transition-colors">
-                    {{ transactionStore.formatIDR(transactionStore.monthlyBudget) }}
-                  </span>
-
-                  <div class="relative">
-                    <UIcon
-                      name="i-heroicons-pencil-square"
-                      class="w-3.5 h-3.5 text-amber-500 transition-all"
-                    />
-
-                    <div
-                      v-if="isGuidanceVisible"
-                      class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-800 text-white text-[10px] font-bold rounded-lg whitespace-nowrap shadow-xl"
-                    >
-                      Isi budget lu dulu, Cok!
-                      <div
-                        class="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-800"
-                      ></div>
-                    </div>
-                  </div>
+                <div v-if="true" class=" flex items-center gap-1">
+                  <span class="text-amber-500 font-bold text-[10px]">{{
+                    transactionStore.formatIDR(transactionStore.income) }}</span>
                 </div>
               </Transition>
             </div>
           </span>
-          <span v-else class="text-emerald-500/50 text-[10px] font-medium italic"
-            >Monthly Profit</span
-          >
+          <span v-else class="text-emerald-500/50 text-[10px] font-medium italic">Monthly Profit</span>
         </div>
 
-        <div v-if="currentTotal > 0" class="flex h-3 w-full gap-1.5 overflow-hidden">
-          <div
-            v-for="(cat, index) in activeCategories"
-            :key="`${isIncomeMode ? 'in' : 'ex'}-${index}`"
-            class="h-full rounded-full transition-all duration-1000 shadow-sm"
-            :style="{ width: `${getPercentage(cat)}%` }"
-            :class="getCategoryColor(cat)"
-          ></div>
+        <!-- SECTION Financial Advisor -->
 
-          <div
-            v-if="!isIncomeMode && transactionStore.spendingPercentage < 100"
-            class="h-full flex-1 rounded-full bg-slate-200 dark:bg-slate-700"
-          ></div>
-        </div>
+        <div v-if="transactionStore.advisorData && !isIncomeMode" class="transition-all duration-500">
 
-        <div v-if="activeCategories.length > 0" class="flex flex-col gap-3 mt-2">
-          <div
-            v-for="cat in activeCategories"
-            :key="cat"
-            class="flex justify-between items-center text-sm animate-fade-in"
-          >
-            <div class="flex items-center gap-3">
-              <div class="w-2 h-2 rounded-full" :class="getCategoryColor(cat)"></div>
-              <span :class="ui.isDark ? 'text-slate-300' : 'text-gray-600'">{{
-                cat
-              }}</span>
-            </div>
-            <span
-              class="font-bold"
-              :class="
-                isIncomeMode
-                  ? 'text-emerald-500'
-                  : ui.isDark
-                  ? 'text-white'
-                  : 'text-slate-900'
-              "
-            >
-              {{
-                transactionStore.formatIDR(
-                  transactionStore.getCategoryTotal(
-                    cat,
-                    isIncomeMode ? "income" : "expense"
-                  )
-                )
-              }}
-            </span>
-          </div>
+          <!-- ANCHOR FINANCIAL BREAKDOWN -->
+          <div class="space-y-4">
 
-          <div
-            v-if="!isIncomeMode && transactionStore.monthlyBudget > 0"
-            class="mt-4 pt-5 border-t border-dashed border-slate-200 dark:border-slate-800 space-y-5"
-          >
-            <div
-              class="p-4 rounded-2xl transition-all duration-500 flex gap-3 items-start"
-              :class="
-                ui.isDark
-                  ? 'bg-slate-800/40 border border-slate-700'
-                  : 'bg-amber-50 border border-amber-100'
-              "
-            >
-              <span class="text-xl">🤖</span>
-              <div class="flex flex-col">
-                <p
-                  class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500 mb-1"
-                >
-                  Financial Advisor
-                </p>
-                <p
-                  class="text-xs leading-relaxed font-bold italic"
-                  :class="ui.isDark ? 'text-slate-200' : 'text-slate-700'"
-                >
-                  "{{ (transactionStore as any).advisorMessage }}"
-                </p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 gap-4">
-              <div
-                v-for="(data, key) in [
-                { label: 'Needs (Pokok 50%)', val: (transactionStore as any).financialAnalysis.needs, color: 'bg-blue-500' },
-                { label: 'Wants (Jajan 30%)', val: (transactionStore as any).financialAnalysis.wants, color: 'bg-amber-500' },
-                { label: 'Savings (Simpan 20%)', val: (transactionStore as any).financialAnalysis.savings, color: 'bg-emerald-500' }
-              ]"
-                :key="key"
-                class="space-y-1.5"
-              >
-                <div class="flex justify-between items-end">
-                  <span
-                    class="text-[9px] font-black uppercase tracking-wider text-slate-500"
-                    >{{ data.label }}</span
-                  >
-                  <span
-                    class="text-[10px] font-black"
-                    :class="
-                      data.val.percentage > 100
-                        ? 'text-rose-500'
-                        : ui.isDark
-                        ? 'text-slate-300'
-                        : 'text-slate-700'
-                    "
-                  >
-                    {{ transactionStore.formatIDR(data.val.total) }} /
-                    {{ transactionStore.formatIDR(data.val.limit) }}
+            <!-- ANCHOR NEEDS -->
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <div class="flex items-center gap-2">
+                  <div class="w-2.5 h-2.5 rounded-full bg-red-400" />
+                  <span class="text-xs font-semibold" :class="ui.isDark ? 'text-slate-200' : 'text-slate-700'">
+                    Needs
                   </span>
                 </div>
+                <span class="text-[11px] text-red-400 font-bold">
+                  {{
+                    transactionStore.formatIDR(
+                      transactionStore.advisorData?.breakdown?.needs
+                    )
+                  }}
+                  /
+                  {{
+                    transactionStore.formatIDR(
+                      transactionStore.advisorData?.limit?.needs
+                    )
+                  }}
+                </span>
+              </div>
+
+              <div class="h-2 rounded-full overflow-hidden bg-slate-200/50 dark:bg-slate-800">
                 <div
-                  class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
-                >
+class="h-full rounded-full bg-red-400 transition-all duration-700" :style="{
+                  width: `${Math.min(
+                    ((transactionStore.advisorData?.breakdown.needs || 0) /
+                      transactionStore.income) * 100,
+                    100
+                  )}%`
+                }" />
+              </div>
+            </div>
+
+            <!-- ANCHOR WANTS -->
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <div class="flex items-center gap-2">
+                  <div class="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                  <span class="text-xs font-semibold" :class="ui.isDark ? 'text-slate-100' : 'text-slate-700'">
+                    Wants
+                  </span>
+                </div>
+
+                <span class="text-[11px] text-red-400 font-bold">
+                  {{
+                    transactionStore.formatIDR(
+                      transactionStore.advisorData?.breakdown?.wants
+                    )
+                  }}
+                  /
+                  {{
+                    transactionStore.formatIDR(
+                      transactionStore.advisorData?.limit?.wants
+                    )
+                  }}
+                </span>
+              </div>
+
+              <div class="h-2 rounded-full overflow-hidden bg-slate-200/50 dark:bg-slate-800">
+                <div
+class="h-full rounded-full bg-amber-400 transition-all duration-700" :style="{
+                  width: `${Math.min(
+                    ((transactionStore.advisorData?.breakdown?.wants || 0) /
+                      transactionStore.income) * 100,
+                    100
+                  )}%`
+                }" />
+              </div>
+            </div>
+
+            <!-- ANCHOR SAVINGS -->
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <div class="flex items-center gap-2">
+                  <div class="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                  <span class="text-xs font-semibold" :class="ui.isDark ? 'text-white' : 'text-slate-700'">
+                    Savings
+                  </span>
+                </div>
+
+                <span class="text-[11px] text-red-400 font-bold">
+                  {{
+                    transactionStore.formatIDR(
+                      transactionStore.advisorData?.breakdown?.savings
+                    )
+                  }}
+                  /
+                  {{
+                    transactionStore.formatIDR(
+                      transactionStore.advisorData?.limit?.savings
+                    )
+                  }}
+                </span>
+              </div>
+
+              <div class="h-2 rounded-full overflow-hidden bg-slate-200/50 dark:bg-slate-800">
+                <div
+class="h-full rounded-full bg-emerald-400 transition-all duration-700" :style="{
+                  width: `${Math.min(
+                    ((transactionStore.advisorData?.breakdown.savings || 0) /
+                      transactionStore.income) * 100,
+                    100
+                  )}%`
+                }" />
+              </div>
+            </div>
+          </div>
+
+          <!-- ANCHOR FORECAST -->
+          <div
+v-if="transactionStore.advisorData?.forecast" class="mt-5 rounded-2xl p-4" :class="ui.isDark
+            ? 'bg-slate-800/70'
+            : 'bg-slate-50'">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <p class="text-[10px] uppercase tracking-wider text-slate-400">
+                  AI Forecast
+                </p>
+
+                <h3 class="text-sm font-bold" :class="ui.isDark ? 'text-white' : 'text-slate-800'">
+                  Prediksi akhir bulan
+                </h3>
+              </div>
+
+              <UIcon name="i-heroicons-chart-bar-square" class="text-xl text-indigo-400" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <!-- ANCHOR Daily Burn -->
+              <div>
+                <p class="text-[10px] text-slate-400 mb-1">
+                  Daily Burn
+                </p>
+
+                <h4 class="font-bold text-sm" :class="ui.isDark ? 'text-white' : 'text-slate-800'">
+                  {{
+                    transactionStore.formatIDR(
+                      transactionStore.advisorData.forecast.dailyBurnRate
+                    )
+                  }} / hari
+                </h4>
+              </div>
+
+              <!-- ANCHOR Projected Expense -->
+              <div>
+                <p class="text-[10px] text-slate-400 mb-1">
+                  Monthly Projection
+                </p>
+
+                <h4 class="font-bold text-sm" :class="ui.isDark ? 'text-white' : 'text-slate-800'">
+                  {{
+                    transactionStore.formatIDR(
+                      transactionStore.advisorData.forecast.projectedMonthlyExpense
+                    )
+                  }} / bulan
+                </h4>
+              </div>
+
+              <!-- ANCHOR Balance -->
+              <div class="col-span-2">
+                <p class="text-[10px] text-slate-400 mb-1">
+                  Estimated Remaining Balance
+                </p>
+
+                <h4 class="font-bold text-sm" :class="ui.isDark ? 'text-white' : 'text-slate-800'">
+                  {{
+                    transactionStore.formatIDR(
+                      transactionStore.advisorData.forecast.projectedBalance
+                    )
+                  }}
+                </h4>
+              </div>
+
+              <!-- ANCHOR Burn Ratio -->
+              <div class="col-span-2">
+                <div class="flex items-center justify-between mb-1">
+                  <p class="text-[10px] text-slate-400">
+                    Burn Ratio
+                  </p>
+
+                  <span
+class="text-[10px] font-bold" :class="transactionStore.advisorData.forecast.burnRatio >= 80
+                    ? 'text-red-400'
+                    : transactionStore.advisorData.forecast.burnRatio >= 50
+                      ? 'text-amber-400'
+                      : 'text-emerald-400'
+                    ">
+                    {{
+                      transactionStore.advisorData.forecast.burnRatio.toFixed(1)
+                    }}%
+                  </span>
+                </div>
+
+                <div class="h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
                   <div
-                    class="h-full rounded-full transition-all duration-1000 ease-out"
-                    :class="[
-                      data.val.percentage > 100
-                        ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]'
-                        : data.color,
-                    ]"
-                    :style="{ width: `${Math.min(data.val.percentage, 100)}%` }"
-                  ></div>
+class="h-full transition-all duration-700" :class="transactionStore.advisorData.forecast.burnRatio >= 80
+                    ? 'bg-red-400'
+                    : transactionStore.advisorData.forecast.burnRatio >= 50
+                      ? 'bg-amber-400'
+                      : 'bg-emerald-400'
+                    " :style="{
+                      width: `${Math.min(
+                        transactionStore.advisorData.forecast.burnRatio,
+                        100
+                      )}%`
+                    }" />
                 </div>
               </div>
             </div>
           </div>
+
+          <!-- ANCHOR FLAGS -->
+          <div v-if="transactionStore.advisorData?.flags.length" class="flex flex-wrap gap-2 mt-4">
+            <div
+v-for="flag in transactionStore.advisorData?.flags" :key="flag"
+              class="px-2.5 py-1 rounded-full text-[10px] font-bold" :class="[
+                flag.includes('DANGER')
+                  ? 'bg-red-500/10 text-red-400'
+                  : flag.includes('WARNING')
+                    ? 'bg-amber-500/10 text-amber-400'
+                    : 'bg-emerald-500/10 text-emerald-400'
+              ]">
+              {{ flag.replaceAll('_', ' ') }}
+            </div>
+          </div>
         </div>
 
-        <div
-          v-else
-          class="py-4 text-center text-xs italic text-slate-500 flex flex-col items-center gap-2"
-        >
+
+
+        <div v-else class="py-4 text-center text-xs italic text-slate-500 flex flex-col items-center gap-2">
           <UIcon name="i-heroicons-circle-stack" class="text-2xl opacity-20" />
           Belum ada data {{ isIncomeMode ? "income" : "spending" }} bulan ini.
         </div>
@@ -251,76 +310,19 @@ const transactionStore = useTransactionStore();
 const ui = useUIStore();
 
 const isIncomeMode = ref(false);
-const isEditingBudget = ref(false);
 const isGuidanceVisible = ref(false);
-const displayBudget = ref("");
-
 const currentTotal = computed(() =>
-  isIncomeMode.value ? transactionStore.totalIncomes : transactionStore.totalExpenses
+  isIncomeMode.value ? transactionStore.income : transactionStore.expense
 );
 
-const activeCategories = computed(() =>
-  isIncomeMode.value
-    ? transactionStore.activeIncomeCategories
-    : transactionStore.activeCategories
-);
 
-const getPercentage = (cat: any) => {
-  return isIncomeMode.value
-    ? transactionStore.getIncomeCategoryPercentage(cat)
-    : transactionStore.getCategoryPercentage(cat);
-};
-
-const startEdit = () => {
-  displayBudget.value = transactionStore.monthlyBudget.toLocaleString("id-ID");
-  isEditingBudget.value = true;
-  isGuidanceVisible.value = false;
-};
-
-const onInputBudget = (e: Event) => {
-  const target = e.target as HTMLInputElement;
-  let val = target.value.replace(/\D/g, "");
-  displayBudget.value = val ? Number(val).toLocaleString("id-ID") : "";
-};
-
-const finishEdit = () => {
-  const cleanValue = parseInt(displayBudget.value.replace(/\./g, "")) || 0;
-  if (cleanValue !== transactionStore.monthlyBudget) {
-    transactionStore.setBudget(cleanValue);
-  }
-  isEditingBudget.value = false;
-};
-
-const getCategoryColor = (category: string): string => {
-  const colors: Record<string, string> = {
-    "Makan/Minum": "bg-amber-200",
-    Belanja: "bg-teal-500",
-    Jajan: "bg-amber-500",
-    "Cicilan/Tagihan": "bg-red-400",
-    Tabungan: "bg-blue-500",
-    Transfer: "bg-emerald-300",
-    "Gaji/Income": "bg-green-500",
-    Investasi: "bg-indigo-500",
-  };
-  return colors[category] || "bg-slate-400";
-};
-
-const vFocus = {
-  mounted: (el: HTMLInputElement) => {
-    setTimeout(() => {
-      el.focus();
-      const len = el.value.length;
-      el.setSelectionRange(len, len);
-    }, 150);
-  },
-};
-
-onMounted(() => {
+onMounted(async () => {
   setTimeout(() => {
-    if (transactionStore.monthlyBudget <= 0) {
+    if (transactionStore.actualBalance <= 0) {
       isGuidanceVisible.value = true;
     }
   }, 1000);
+
 });
 </script>
 
@@ -335,6 +337,7 @@ onMounted(() => {
     width: 0;
   }
 }
+
 .rounded-full {
   animation: grow 1s ease-out;
 }
@@ -343,6 +346,7 @@ onMounted(() => {
 .fade-fast-leave-active {
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
+
 .fade-fast-enter-from,
 .fade-fast-leave-to {
   opacity: 0;
@@ -352,11 +356,13 @@ onMounted(() => {
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out;
 }
+
 @keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateX(-5px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);

@@ -1,10 +1,12 @@
 import type { FetchError } from 'ofetch'
 import { loginService, type TCredentials } from '~/services/auth.service'
-import { useAuthStore } from '~/stores/auth'
+import { useAuthStore } from '~/stores/auth';
+import { useTransactionStore } from '~/stores/useTransactionStore';
 import type { TLoginResult } from '~/types/IUser'
 
 export const useAuth = () => {
   const authStore = useAuthStore()
+  const transactionStore = useTransactionStore()
   const { notifyError, notifySuccess } = useNotifier()
   const router = useRouter()
   const isLoading = ref(false)
@@ -50,6 +52,7 @@ export const useAuth = () => {
     }
 
     await authStore.setLoginAction(res)
+    await transactionStore.setActualBalance(res.data.user.actualBalance)
     await router.push('/dashboard')
 
     setTimeout(() => {

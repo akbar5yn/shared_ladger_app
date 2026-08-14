@@ -1,8 +1,8 @@
 <template>
   <div class="container-bg">
-    <div class="layer light-layer" :class="{ 'hidden-layer': themeStore.isDark }"></div>
+    <div class="layer light-layer" :class="{ 'hidden-layer': themeStore.isDark }"/>
 
-    <div class="layer dark-layer" :class="{ 'active-layer': themeStore.isDark }"></div>
+    <div class="layer dark-layer" :class="{ 'active-layer': themeStore.isDark }"/>
 
     <div class="glass-layer" :style="{ paddingTop: 'env(safe-area-inset-top, 0px)' }">
       <div class="main-slot flex flex-col w-full">
@@ -52,11 +52,9 @@ onMounted(() => themeStore.initTheme());
     content: "";
     position: absolute;
     inset: 0;
-    background: radial-gradient(
-      circle at center,
-      rgba(15, 23, 42, 0) 0%,
-      rgba(2, 6, 23, 0.7) 100%
-    );
+    background: radial-gradient(circle at center,
+        rgba(15, 23, 42, 0) 0%,
+        rgba(2, 6, 23, 0.7) 100%);
   }
 
   .dark-layer.active-layer {
@@ -81,7 +79,7 @@ onMounted(() => themeStore.initTheme());
 }
 
 /* Glass effect saat Dark Mode */
-.active-layer ~ .glass-layer {
+.active-layer~.glass-layer {
   background: rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(6px);
 }

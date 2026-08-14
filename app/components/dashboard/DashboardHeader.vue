@@ -4,19 +4,12 @@
       <ClientOnly>
         <div class="img-wrapper relative w-14 h-14">
           <NuxtImg
-            src="/icons/user.png"
-            alt="user_avatar"
-            width="50"
-            height="50"
-            :class="imgLoaded ? 'opacity-100' : 'opacity-0'"
-            @load="onImgLoad"
-          />
+src="/icons/user.png" alt="user_avatar" width="50" height="50"
+            :class="imgLoaded ? 'opacity-100' : 'opacity-0'" @load="onImgLoad" />
         </div>
       </ClientOnly>
       <div class="flex flex-col gap-0 justify-center">
-        <span class="day text-slate-900" :class="[{ 'font-light': isDark }]"
-          >Good Morning,</span
-        >
+        <span class="day text-slate-900" :class="[{ 'font-light': isDark }]">{{ greeting }}</span>
         <span class="username text-slate-900" :class="[{ 'font-light': isDark }]">{{
           userInfo?.name ?? "Guest Mode"
         }}</span>
@@ -24,40 +17,22 @@
     </div>
     <div class="toggle-btn-wrapper">
       <button
-        @click="toggleMode"
-        :class="[{ 'btn-is-dark': isDark, 'btn-is-light': !isDark }]"
-        class="relative w-10 h-10 flex items-center justify-center rounded-xl backdrop-blur-md border overflow-hidden transition-all duration-300 active:scale-90"
-      >
+:class="[{ 'btn-is-dark': isDark, 'btn-is-light': !isDark }]" class="relative w-10 h-10 flex items-center justify-center rounded-xl backdrop-blur-md border overflow-hidden transition-all duration-300 active:scale-90"
+        @click="toggleMode">
         <transition name="sun-moon">
           <div v-if="isDark" key="moon" class="absolute">
             <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="text-yellow-400"
-            >
+xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="text-yellow-400">
               <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
             </svg>
           </div>
           <div v-else key="sun" class="absolute">
             <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="text-orange-300"
-            >
+xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="text-orange-300">
               <circle cx="12" cy="12" r="4" />
               <path d="M12 2v2" />
               <path d="M12 20v2" />
@@ -93,6 +68,24 @@ function onImgLoad() {
 const toggleMode = () => {
   themeStore.toggleTheme();
 };
+
+const greeting = computed(() => {
+  const hour = new Date().getHours()
+
+  if (hour >= 4 && hour < 11) {
+    return 'Good Morning,'
+  }
+
+  if (hour >= 11 && hour < 15) {
+    return 'Good Afternoon,'
+  }
+
+  if (hour >= 15 && hour < 18) {
+    return 'Good Evening,'
+  }
+
+  return 'Good Night,'
+})
 </script>
 
 <style scoped lang="scss">

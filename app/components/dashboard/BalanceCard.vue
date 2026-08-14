@@ -1,173 +1,147 @@
 <template>
-  <div class="card-wrapper">
+  <div class="card-wrapper" @touchstart="onTouchStart" @touchend="onTouchEnd">
+
+    <Transition v-if="bankStore.accounts.length > 0" :name="transitionName" mode="out-in">
+      <div
+:key="bankStore.currentAccount?.id"
+        class="relative w-full rounded-3xl p-6 border overflow-hidden transition-all duration-500" :class="ui.isDark
+          ? 'bg-slate-900 border-slate-800'
+          : 'bg-white border-gray-100'">
+
+        <div
+class="absolute -top-16 -right-10 w-40 h-40 rounded-full blur-3xl opacity-20 pointer-events-none"
+          :style="{ background: bankStore.currentBankTheme.glowColor }" />
+
+        <div class="flex justify-between items-start">
+          <div>
+            <p
+class="text-sm mb-1 transition-colors duration-700"
+              :class="ui.isDark ? 'text-slate-400' : 'text-gray-500'">
+              Current Balance ({{ bankStore.currentAccount?.name }})
+            </p>
+
+            <h1 class="text-2xl font-bold tracking-tight" :class="ui.isDark ? 'text-white' : 'text-slate-900'">
+              {{ transactionStore.formatIDR(bankStore.currentAccount?.balance) }}
+            </h1>
+
+            <p class="tracking-[0.25em] text-[11px] mt-2 text-slate-400">
+              •••• •••• 2201
+            </p>
+          </div>
+
+          <div class="flex flex-col items-end">
+            <p class="text-sm text-gray-400">Bank Account</p>
+
+            <img
+:src="bankStore.currentBankTheme.logo" class="object-contain mt-1"
+              :class="bankStore.currentBankTheme.imSize" >
+
+            <span v-if="bankStore.accounts.length > 1" class="text-[10px] text-gray-400 mt-2">
+              Swipe ← →
+            </span>
+          </div>
+        </div>
+
+        <div
+class="mt-5 rounded-2xl p-3 flex items-center justify-between transition-all duration-700" :class="ui.isDark
+          ? 'bg-slate-800/70'
+          : 'bg-slate-50'
+          ">
+          <div>
+            <p class="text-[10px] uppercase tracking-wider text-slate-400">
+              AI Finance Status
+            </p>
+
+            <p class="text-xs font-medium mt-1 leading-relaxed" :class="ui.isDark ? 'text-white' : 'text-slate-800'">
+              {{ transactionStore.advisorData?.prediction ?? 'Belum ada analisis untuk dompet ini.' }}
+            </p>
+          </div>
+
+          <UIcon name="i-heroicons-sparkles" class="text-2xl text-amber-400" />
+        </div>
+      </div>
+    </Transition>
+
     <div
-      class="card-container relative w-full rounded-3xl p-6 pt-10 border transition-colors duration-700 ease-in-out"
-      :class="[
-        ui.isDark
-          ? 'bg-slate-900 border-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)]'
-          : 'bg-white border-gray-100 shadow-sm',
-      ]"
-    >
-      <div
-        class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center border-4 transition-all duration-700"
-        :class="[
-          ui.isDark
-            ? 'bg-amber-500 border-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.4)]'
-            : 'bg-black border-[#fafafa]',
-        ]"
-      >
-        <UIcon
-          name="i-heroicons-banknotes"
-          class="text-xl transition-colors duration-700"
-          :class="ui.isDark ? 'text-slate-950' : 'text-white'"
-        />
-      </div>
-
-      <div
-        class="flex justify-between items-center divide-x divide-gray-300 transition-colors duration-700"
-        :class="ui.isDark ? 'divide-slate-600' : 'divide-gray-200'"
-      >
-        <div class="flex-1 text-center group cursor-pointer">
-          <UModal v-model:open="isOpen">
-            <p
-              class="text-sm mb-1 transition-colors duration-700 flex items-center justify-center gap-1"
-              :class="ui.isDark ? 'text-slate-400' : 'text-gray-500'"
-            >
-              Current Balance
-              <UIcon name="i-heroicons-pencil-square" class="text-sm" />
-            </p>
-            <p
-              class="text-xl font-bold transition-colors duration-700"
-              :class="ui.isDark ? 'text-white' : 'text-slate-900'"
-            >
-              {{ transactionStore.formatIDR(transactionStore.remainingBalance) }}
-            </p>
-
-            <template #content>
-              <UCard
-                :ui="{
-                  root: 'shadow-xl bg-white dark:bg-white overflow-hidden border-none',
-                  header:
-                    'bg-gray-50/50 dark:bg-white border-b border-gray-100 dark:border-slate-800 p-4',
-                  body: 'p-6 bg-white',
-                  footer: 'p-4 bg-gray-50/30 dark:bg-white',
-                }"
-              >
-                <template #header>
-                  <div class="flex items-center justify-between">
-                    <h3 class="text-base font-bold text-slate-900 dark:text-white">
-                      Update Saldo Manual
-                    </h3>
-                  </div>
-                </template>
-
-                <div class="space-y-4">
-                  <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Sesuaikan saldo sistem dengan saldo riil di dompet/rekening lu
-                    sekarang.
-                  </p>
-
-                  <UFieldGroup class="font-medium text-slate-700 dark:text-slate-200">
-                    <UInput
-                      v-model="displayAmount"
-                      type="text"
-                      inputmode="numeric"
-                      placeholder="Masukan nominal mu"
-                      icon="i-heroicons-banknotes"
-                      class="w-full"
-                      :ui="{
-                        base:
-                          'bg-white dark:bg-gray-200/50 border text-sm font-black text-slate-900 ring-0 focus:ring-0 focus-visible:ring-0 font-medium',
-                      }"
-                      autofocus
-                    />
-                  </UFieldGroup>
-                </div>
-
-                <template #footer>
-                  <div class="flex justify-end gap-3">
-                    <UButton
-                      color="neutral"
-                      variant="ghost"
-                      label="Batal"
-                      class="hover:bg-gray-100 text-black"
-                      @click="isOpen = false"
-                    />
-                    <UButton
-                      :ui="{
-                        base: 'bg-amber-200',
-                      }"
-                      label="Update Saldo"
-                      class="px-6 shadow-md"
-                      @click="handleUpdateBalance"
-                    />
-                  </div>
-                </template>
-              </UCard>
-            </template>
-          </UModal>
-        </div>
-
-        <div class="flex-1 text-center">
-          <p
-            class="text-sm mb-1 transition-colors duration-700"
-            :class="ui.isDark ? 'text-slate-400' : 'text-gray-500'"
-          >
-            Total Expenses
-          </p>
-          <p
-            class="text-xl font-bold transition-colors duration-700"
-            :class="ui.isDark ? 'text-amber-500' : 'text-slate-900'"
-          >
-            {{ transactionStore.formatIDR(transactionStore.totalExpenses) }}
-          </p>
-        </div>
-      </div>
+v-else
+      class="w-full rounded-3xl p-8 border border-dashed border-slate-300 dark:border-slate-700 text-center flex flex-col items-center gap-3">
+      <UIcon name="i-heroicons-credit-card" class="text-4xl text-slate-400 dark:text-slate-500" />
+      <p class="text-sm text-slate-500 dark:text-slate-400">Kamu belum mengonfigurasi dompet digital atau akun bank.</p>
+      <button class="px-4 py-2 bg-amber-500 text-slate-950 font-bold rounded-xl text-xs active:scale-95 transition">
+        + Buat Akun Dompet
+      </button>
     </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { useUIStore } from "~/stores/ui";
-import { useTransactionStore } from "~/stores/useTransactionStore";
-const ui = useUIStore();
-const transactionStore = useTransactionStore();
-const isOpen = ref(false);
-const manualAmount = ref<number>(0);
+import { ref } from 'vue'
+import { useUIStore } from '~/stores/ui'
+import { useTransactionStore } from '~/stores/useTransactionStore'
+import { useBankStore } from '~/stores/banks' // 👈 Import bank store pilihanmu
 
-watch(isOpen, (newVal) => {
-  if (newVal) {
-    manualAmount.value = transactionStore.actualBalance;
+const ui = useUIStore()
+const transactionStore = useTransactionStore()
+const bankStore = useBankStore() // 👈 Inisialisasi store
+
+const transitionName = ref('bank-swipe-right')
+
+/* SWIPE LOGIC USING PINIA ACTIONS */
+let startX: number = 0
+
+function onTouchStart(e: TouchEvent) {
+  startX = e.touches?.[0]?.clientX ?? 0
+}
+
+function onTouchEnd(e: TouchEvent) {
+  const endX = e.changedTouches[0]?.clientX ?? 0
+  const diff = endX - startX
+
+  if (Math.abs(diff) < 40) return
+
+  if (diff < 0) {
+    // Geser ke kanan (Next)
+    const direct = bankStore.nextBank()
+    if (direct !== 'none') transitionName.value = 'bank-swipe-right'
+  } else {
+    // Geser ke kiri (Prev)
+    const direct = bankStore.prevBank()
+    if (direct !== 'none') transitionName.value = 'bank-swipe-left'
   }
-});
-
-const displayAmount = computed({
-  get: () => {
-    return manualAmount.value.toLocaleString("id-ID");
-  },
-  set: (newValue) => {
-    const numberValue = parseInt(newValue.replace(/\D/g, ""));
-    manualAmount.value = isNaN(numberValue) ? 0 : numberValue;
-  },
-});
-
-const handleUpdateBalance = () => {
-  transactionStore.updateActualBalance(Number(manualAmount.value));
-  isOpen.value = false;
-};
+}
 </script>
 
-<style lang="scss" scoped>
+<style scoped lang="scss">
 .card-wrapper {
-  padding: 15px;
+  padding: 0 15px;
 }
 
-.bg-add-balance {
-  background-color: red;
+/* Animasi Perpindahan Kartu Swipe */
+.bank-swipe-right-enter-active,
+.bank-swipe-right-leave-active,
+.bank-swipe-left-enter-active,
+.bank-swipe-left-leave-active {
+  transition: all 0.3s ease-out;
 }
 
-.card-container {
-  isolation: isolate;
-  backface-visibility: hidden;
+.bank-swipe-right-enter-from {
+  opacity: 0;
+  transform: translateX(40px);
+}
+
+.bank-swipe-right-leave-to {
+  opacity: 0;
+  transform: translateX(-40px);
+}
+
+.bank-swipe-left-enter-from {
+  opacity: 0;
+  transform: translateX(-40px);
+}
+
+.bank-swipe-left-leave-to {
+  opacity: 0;
+  transform: translateX(40px);
 }
 </style>

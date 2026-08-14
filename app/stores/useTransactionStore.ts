@@ -1,329 +1,120 @@
-import { is } from "zod/v4/locales";
-import type { IRecentTransaction, TTransactionCategory, TTransactionMetadata } from "~/types/INotification";
 
-const extractNominal = (text: string): number => {
-    const match = text.match(/Rp(\d{1,3}(?:\.\d{3})*)/)
-    if (match && match[1]) {
-        return parseInt(match[1].replace(/\./g, ''))
-    }
-    return 0
+import type { IDataTransaction, IDataTransactionResponse, IDynamicOption, IMonthlyAdvisorData } from '~/types/ITransaction';
+
+interface CapStorage {
+  getItem(key: string): Promise<string | null>;
+  setItem(key: string, value: string): Promise<void>;
 }
 
-
 export const useTransactionStore = defineStore('transaction', {
-    state: () => ({
-        monthlyBudget: 0,
-        actualBalance: 0,
-        history: [] as IRecentTransaction[],
-        pendingTransactions: [] as IRecentTransaction[]
-    }),
+  state: () => ({
+    actualBalance: 0 as number,
+    expense: 0 as number,
+    income: 0 as number,
+    history: [] as IDataTransaction[],
+    pendingOfTransactions: [] as IDataTransaction[],
+    allCategoryOptions: [] as IDynamicOption[],
+    advisorData: null as IMonthlyAdvisorData | null,
+  }),
 
-    getters: {
-        totalIncomes: (state) => {
-            return state.history
-                .filter(t => t.type === 'income')
-                .reduce((acc, curr) => acc + curr.amount, 0);
+  getters: {
+    // SECTION getter setelah implement service
+    formatIDR:
+      () =>
+        (val: number | undefined): string => {
+          return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0,
+          }).format(val ?? 0)
         },
 
-        totalExpenses: (state) => {
-            return state.history
-                .filter(t => t.type === 'expense')
-                .reduce((acc, curr) => acc + curr.amount, 0);
-        },
 
-        remainingBalance(): number {
-            return this.actualBalance;
-        },
+  },
 
-        spendingPercentage(): number {
-            return (this.totalExpenses / this.monthlyBudget) * 100;
-        },
-
-        formatIDR: () => (val: number): string => {
-            return new Intl.NumberFormat('id-ID', {
-                style: 'currency', currency: 'IDR', minimumFractionDigits: 0
-            }).format(val);
-        },
-
-        activeIncomeCategories(state): TTransactionCategory[] {
-            const categories = state.history
-                .filter(t => t.type === 'income')
-                .map(t => t.category as TTransactionCategory);
-
-            return [...new Set(categories.filter(Boolean))];
-        },
-
-        activeCategories(state): TTransactionCategory[] {
-            const categories = state.history
-                .filter(t => t.type === 'expense')
-                .map(t => t.category as TTransactionCategory);
-
-            return [...new Set(categories.filter(Boolean))];
-        },
-
-        getCategoryTotal: (state) => (category: TTransactionCategory, type: 'income' | 'expense' = 'expense'): number => {
-            return state.history
-                .filter(t => t.category === category && t.type === type)
-                .reduce((acc, curr) => acc + curr.amount, 0);
-        },
-
-        getIncomeCategoryPercentage: (state) => (category: TTransactionCategory): number => {
-            const total = state.history
-                .filter(t => t.type === 'income')
-                .reduce((acc, curr) => acc + curr.amount, 0);
-
-            if (total === 0) return 0;
-
-            const categoryTotal = state.history
-                .filter(t => t.category === category && t.type === 'income')
-                .reduce((acc, curr) => acc + curr.amount, 0);
-
-            return (categoryTotal / total) * 100;
-        },
-
-        getCategoryPercentage: (state) => (category: TTransactionCategory): number => {
-            const total = state.history
-                .filter(t => t.type === 'expense')
-                .reduce((acc, curr) => acc + curr.amount, 0);
-
-            if (total === 0) return 0;
-
-            const categoryTotal = state.history
-                .filter(t => t.category === category && t.type === 'expense')
-                .reduce((acc, curr) => acc + curr.amount, 0);
-
-            return (categoryTotal / total) * 100;
-        },
-
-        formattedTotalExpenses(): string {
-            return this.formatIDR(this.totalExpenses);
-        },
-        financialAnalysis: (state) => {
-            const budget = state.monthlyBudget || 0;
-
-            // Pemetaan Kategori ke Kelompok Besar
-            const needsCategories = ['Makan/Minum', 'Cicilan/Tagihan', 'Transportasi'];
-            const wantsCategories = ['Jajan', 'Belanja', 'Lainnya'];
-            const savingsCategories = ['Tabungan', 'Investasi'];
-
-            const expenseHistory = state.history.filter(t => t.type === 'expense');
-
-            const needsTotal = expenseHistory
-                .filter(t => needsCategories.includes(t.category || ''))
-                .reduce((acc, curr) => acc + curr.amount, 0);
-
-            const wantsTotal = expenseHistory
-                .filter(t => wantsCategories.includes(t.category || ''))
-                .reduce((acc, curr) => acc + curr.amount, 0);
-
-            const savingsTotal = expenseHistory
-                .filter(t => savingsCategories.includes(t.category || ''))
-                .reduce((acc, curr) => acc + curr.amount, 0);
-
-            return {
-                budget,
-                needs: {
-                    total: needsTotal,
-                    limit: budget * 0.5,
-                    percentage: budget > 0 ? (needsTotal / (budget * 0.5)) * 100 : 0
-                },
-                wants: {
-                    total: wantsTotal,
-                    limit: budget * 0.3,
-                    percentage: budget > 0 ? (wantsTotal / (budget * 0.3)) * 100 : 0
-                },
-                savings: {
-                    total: savingsTotal,
-                    limit: budget * 0.2,
-                    percentage: budget > 0 ? (savingsTotal / (budget * 0.2)) * 100 : 0
-                }
-            };
-        },
-
-        // 2. Pesan Penasihat (Financial Advisor)
-        advisorMessage: (state) => {
-            const { needs, wants, budget } = (state as any).financialAnalysis;
-            if (budget <= 0) return "Set budget bulanan lu dulu, Cok, biar gue bisa analisa!";
-
-            if (wants.percentage > 100) {
-                return "Waduh Cok! Jatah jajan (Wants) lu udah jebol. Stop belanja yang nggak perlu atau lu bakal ngutang!";
-            }
-            if (needs.percentage > 100) {
-                return "Kebutuhan pokok (Needs) lu udah lewat batas. Coba cek lagi, ada tagihan yang bisa dihemat nggak?";
-            }
-            if (wants.percentage > 80) {
-                return "Hati-hati, jatah jajan lu sisa dikit lagi. Rem dulu, jangan laper mata!";
-            }
-            return "Keuangan lu masih aman terkendali. Pertahankan gaya hidup hemat lu, Cok!";
-        }
+  actions: {
+    async rehydrate() {
+      const { $capStorage } = useNuxtApp()
+      const capStorage = $capStorage as CapStorage
+      const data = await capStorage.getItem('transaction_store')
+      if (data) {
+        this.$patch(JSON.parse(data))
+      }
     },
 
-    actions: {
-        async rehydrate() {
-            const { $capStorage } = useNuxtApp()
-            const data = await ($capStorage as any).getItem('transaction_store')
-            if (data) {
-                this.$patch(JSON.parse(data))
-            }
-        },
+    async saveToDisk() {
+      try {
+        const { $capStorage } = useNuxtApp()
+        const capStorage = $capStorage as CapStorage
+        const dataToSave = JSON.stringify({
+          history: this.history,
+          // pendingTransactions: this.pendingTransactions,
+          actualBalance: this.actualBalance,
+          pendingOfTransactions: this.pendingOfTransactions,
+        })
+        await capStorage.setItem('transaction_store', dataToSave)
+      } catch (e) {
+        console.error('❌ Gagal simpan ke disk:', e)
+      }
+    },
 
-        async saveToDisk() {
-            try {
-                const { $capStorage } = useNuxtApp()
-                const dataToSave = JSON.stringify({
-                    history: this.history,
-                    pendingTransactions: this.pendingTransactions,
-                    monthlyBudget: this.monthlyBudget,
-                    actualBalance: this.actualBalance
-                })
-                await ($capStorage as any).setItem('transaction_store', dataToSave)
-            } catch (e) {
-                console.error("❌ Gagal simpan ke disk:", e)
-            }
-        },
-        async addTransaction(payload: {
-            title: string,
-            text: string,
-            pkg: string,
-            timestamp?: number,
-            amount?: number,
-            metadata?: TTransactionMetadata,
-            icon?: string
-            type?: TTransactionMetadata
-        }) {
-            const { title, text, pkg, timestamp, amount: manualAmount, metadata: manualMetadata } = payload
+    async removePending(id: string | number) {
+      this.pendingOfTransactions = this.pendingOfTransactions.filter(
+        (t) => t.id !== id
+      )
+    },
 
-            const isOcr = pkg.toLowerCase() === 'ocr'
+    // SECTION action setelah implement service 
 
-            const nativeId = timestamp || Date.now()
+    async setPendingTransaction(payload: IDataTransactionResponse) {
+      this.pendingOfTransactions = payload.data.transactions
+      this.allCategoryOptions = payload.data.allCategoryOptions
+      await this.saveToDisk()
+      console.log(this.pendingOfTransactions, 'cekkk')
+    },
 
-            const isDuplicate = this.pendingTransactions.some(t => {
-                const sameText = t.text === text;
-                const isWithinTolerance = Math.abs((t.nativeId || 0) - nativeId) < 5000;
-                return sameText && isWithinTolerance;
-            }) || this.history.some(t => t.text === text && Math.abs((t.nativeId || 0) - nativeId) < 5000);
+    async setActualBalance(amount: number) {
+      this.actualBalance = amount
+      await this.saveToDisk()
+    },
 
-            if (isDuplicate && !isOcr) {
-                return
-            }
+    updateActualBalance(amount: number, type?: 'income' | 'expense') {
+      if (type === 'income') {
+        this.actualBalance += amount
+      } else {
+        this.actualBalance -= amount
+      }
+      this.saveToDisk()
+    },
 
-            const isAladin = pkg.toLowerCase().includes('aladin')
-            const isBca = pkg.toLowerCase().includes('com.bca') || pkg.toLowerCase().includes('bca')
-            // const isInsta = pkg.toLowerCase().includes('com.instagram') || pkg.toLowerCase().includes('instagram')
 
-            if (!isAladin && !isBca && !isOcr) {
-                return
-            }
+    async confirmTransaction(tx: IDataTransaction) {
+      console.log('tx id:', tx.id)
+      console.log('pending ids:', this.pendingOfTransactions.map(t => t.id))
+      console.log('pending', this.pendingOfTransactions);
 
-            const amount = manualAmount !== undefined ? manualAmount : extractNominal(text)
-            const lowerTitle = title.toLowerCase()
-            const lowerText = text.toLowerCase()
+      const index = this.pendingOfTransactions.findIndex(
+        (t) => t.id === tx.id
+      )
 
-            let categoryType: TTransactionMetadata = manualMetadata || 'UNCLEAR'
-            if (
-                lowerTitle.includes('transaksi uang masuk') ||
-                lowerTitle.includes('BCA mobile') ||
-                lowerText.includes('uang masuk berhasil') ||
-                lowerText.includes('dana masuk') ||
-                lowerText.includes('melalui layanan BI-Fast') ||
-                lowerText.includes('transfer masuk')
-            ) {
-                categoryType = 'INCOME_AUTO'
-            } else if (
-                lowerTitle.includes('qris') ||
-                lowerTitle.includes('transaksi qris')
-            ) {
-                categoryType = 'QRIS_AUTO'
-            } else if (
-                lowerText.includes('transfer berhasil') ||
-                lowerText.includes('dana') && lowerText.includes('terkirim')
-            ) {
-                categoryType = 'TRANSFER_MANUAL'
-            }
+      if (index !== -1) {
+        this.pendingOfTransactions.splice(index, 1)
+      }
 
-            const metadataIconMap: Record<string, string> = {
-                'INCOME_AUTO': 'i-heroicons-arrow-down-circle',
-                'QRIS_AUTO': 'i-heroicons-qr-code',
-                'TRANSFER_MANUAL': 'i-heroicons-paper-airplane',
-                'UNCLEAR': 'i-heroicons-question-mark-circle'
-            }
+      const confirmedTx: IDataTransaction = {
+        ...tx,
+        status: 'confirmed',
+      }
 
-            const newEntry: IRecentTransaction = {
-                id: `tr-${Date.now()}`,
-                nativeId: nativeId,
-                title: title,
-                text: text,
-                amount: amount,
-                icon: metadataIconMap[categoryType] || 'i-heroicons-bell',
-                type: categoryType === 'INCOME_AUTO' ? 'income' : 'expense',
-                date: new Date(nativeId).toLocaleDateString('id-ID'),
-                time: new Date(nativeId).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-                metadata: categoryType
-            }
+      this.history.unshift(confirmedTx)
 
-            this.pendingTransactions.unshift(newEntry)
-            await this.saveToDisk()
-        },
+      this.updateActualBalance(tx.amount, tx.type)
+    },
 
-        confirmTransaction(id: string | number, category: TTransactionCategory, finalType: 'income' | 'expense') {
-            const index = this.pendingTransactions.findIndex(t => t.id === id)
-
-            if (index !== -1) {
-                const item = this.pendingTransactions[index]
-                if (item) {
-                    const iconMap: Record<string, string> = {
-                        'Makan/Minum': 'i-heroicons-building-storefront',
-                        'Belanja': 'i-heroicons-shopping-bag',
-                        'Gaji/Income': 'i-heroicons-banknotes',
-                        'Tabungan': 'i-heroicons-building-library',
-                        'Cicilan/Tagihan': 'i-heroicons-credit-card',
-                        'Transfer': 'i-heroicons-paper-airplane',
-                        'Investasi': 'i-heroicons-chart-bar-square',
-                        'Jajan': 'i-heroicons-ticket',
-                        'Lainnya': 'i-heroicons-ellipsis-horizontal-circle'
-                    }
-
-                    const confirmedData: IRecentTransaction = {
-                        id: item.id,
-                        nativeId: item.nativeId,
-                        title: category,
-                        category: category,
-                        text: item.text,
-                        icon: iconMap[category] || 'i-heroicons-hashtag',
-                        date: item.date,
-                        time: item.time,
-                        amount: item.amount,
-                        type: finalType
-                    }
-
-                    this.history.unshift(confirmedData)
-                    if (finalType === 'income') {
-                        this.actualBalance += item.amount
-                    } else {
-                        this.actualBalance -= item.amount
-                    }
-                }
-                this.pendingTransactions.splice(index, 1)
-                this.saveToDisk()
-            }
-        },
-
-        updateActualBalance(amount: number) {
-            this.actualBalance = amount;
-            this.saveToDisk();
-        },
-
-        setBudget(amount: number) {
-            this.monthlyBudget = amount;
-            this.saveToDisk();
-        },
-
-        async removePending(id: string | number) {
-            const index = this.pendingTransactions.findIndex(t => t.id === id)
-            if (index !== -1) {
-                this.pendingTransactions.splice(index, 1)
-                await this.saveToDisk()
-            }
-        }
+    async setMonthlyAdvisor(payload: IMonthlyAdvisorData) {
+      this.advisorData = payload
+      this.updateActualBalance(payload.income, 'income')
     }
+  },
+
 })

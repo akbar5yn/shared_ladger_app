@@ -17,16 +17,16 @@
 
     <!-- //SECTION MODAL -->
 
+    <!-- <ToastModal /> -->
     <ToastModal />
-    <ModalLogout />
   </div>
 </template>
 
 <script setup lang="ts">
 import BalanceCard from "~/components/dashboard/BalanceCard.vue";
 import OverviewCard from "~/components/dashboard/OverviewCard.vue";
-import ModalLogout from "~/components/ui/modals/ModalLogout.vue";
 import ToastModal from "~/components/ui/modals/ToastModal.vue";
+import { useBankStore } from "~/stores/banks";
 import { useUIStore } from "~/stores/ui";
 import { useTransactionStore } from "~/stores/useTransactionStore";
 
@@ -34,7 +34,9 @@ definePageMeta({ middleware: ["auth"], layout: "default" });
 
 const ui = useUIStore();
 const transactionStore = useTransactionStore();
-const { handleComeTransaction, checkPendingData } = useBankObserver();
+const bankStore = useBankStore()
+const { getAdvisor, getSummary } = useSummary()
+const { handleComeTransaction, checkPendingData, getAccount, getPendingTransaction } = useBankObserver();
 
 const isLoading = ref(true);
 
@@ -43,6 +45,7 @@ onMounted(async () => {
     ui.setPageLoading(true);
     await transactionStore.rehydrate();
     handleComeTransaction();
+    getAccount()
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") {
         console.log("Welcome back! Checking warehouse...");
@@ -56,6 +59,16 @@ onMounted(async () => {
     }, 800);
   }
 });
+
+watch(
+  () => bankStore.activeAccountId,
+  async (newAccountId) => {
+    console.log(newAccountId);
+    await getPendingTransaction(newAccountId)
+    await getAdvisor(newAccountId)
+    await getSummary(newAccountId)
+  }
+)
 </script>
 
 <style scoped>
