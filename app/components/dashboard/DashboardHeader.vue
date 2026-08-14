@@ -10,14 +10,15 @@ src="/icons/user.png" alt="user_avatar" width="50" height="50"
       </ClientOnly>
       <div class="flex flex-col gap-0 justify-center">
         <span class="day text-slate-900" :class="[{ 'font-light': isDark }]">{{ greeting }}</span>
-        <span class="username text-slate-900" :class="[{ 'font-light': isDark }]">{{
+        <span class="username text-slate-900" :class="[{ 'font-light': isDark }]" @click="onProfileTap">{{
           userInfo?.name ?? "Guest Mode"
-        }}</span>
+          }}</span>
       </div>
     </div>
     <div class="toggle-btn-wrapper">
       <button
-:class="[{ 'btn-is-dark': isDark, 'btn-is-light': !isDark }]" class="relative w-10 h-10 flex items-center justify-center rounded-xl backdrop-blur-md border overflow-hidden transition-all duration-300 active:scale-90"
+:class="[{ 'btn-is-dark': isDark, 'btn-is-light': !isDark }]"
+        class="relative w-10 h-10 flex items-center justify-center rounded-xl backdrop-blur-md border overflow-hidden transition-all duration-300 active:scale-90"
         @click="toggleMode">
         <transition name="sun-moon">
           <div v-if="isDark" key="moon" class="absolute">
@@ -56,6 +57,7 @@ import { useUIStore } from "~/stores/ui";
 
 const { userInfo } = useAuthStore();
 const themeStore = useUIStore();
+const router = useRouter();
 const imgLoaded = ref(false);
 
 // SECTION Computed
@@ -67,6 +69,21 @@ function onImgLoad() {
 
 const toggleMode = () => {
   themeStore.toggleTheme();
+};
+
+// Debug: tap nama profile 3x untuk buka halaman API log
+let profileTapCount = 0;
+let profileTapTimer: ReturnType<typeof setTimeout> | null = null;
+const onProfileTap = () => {
+  profileTapCount++;
+  if (profileTapTimer) clearTimeout(profileTapTimer);
+  profileTapTimer = setTimeout(() => {
+    profileTapCount = 0;
+  }, 800);
+  if (profileTapCount >= 3) {
+    profileTapCount = 0;
+    router.push("/debug-log");
+  }
 };
 
 const greeting = computed(() => {

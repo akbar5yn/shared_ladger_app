@@ -13,6 +13,9 @@ export default defineNuxtConfig({
   image: {
     provider: 'none',
   },
+  nitro: {
+    preset: 'static',
+  },
   compatibilityDate: '2025-07-15',
   devtools: { enabled: false },
   app: {

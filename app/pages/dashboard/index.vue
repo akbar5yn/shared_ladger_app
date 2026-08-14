@@ -19,6 +19,7 @@
 
     <!-- <ToastModal /> -->
     <ToastModal />
+    <CreateAccountModal />
   </div>
 </template>
 
@@ -26,6 +27,7 @@
 import BalanceCard from "~/components/dashboard/BalanceCard.vue";
 import OverviewCard from "~/components/dashboard/OverviewCard.vue";
 import ToastModal from "~/components/ui/modals/ToastModal.vue";
+import CreateAccountModal from "~/components/dashboard/CreateAccountModal.vue";
 import { useBankStore } from "~/stores/banks";
 import { useUIStore } from "~/stores/ui";
 import { useTransactionStore } from "~/stores/useTransactionStore";
@@ -63,10 +65,39 @@ onMounted(async () => {
 watch(
   () => bankStore.activeAccountId,
   async (newAccountId) => {
-    console.log(newAccountId);
-    await getPendingTransaction(newAccountId)
-    await getAdvisor(newAccountId)
-    await getSummary(newAccountId)
+    // Di slide "Tambah Akun" gak ada akun aktif → tiadakan summary biar gak membingungkan.
+    if (bankStore.atAddCard || !newAccountId) {
+      transactionStore.setSummaryLoading(false)
+      return
+    }
+    // Tampilkan skeleton loader saat fetch summary bulanan dari API.
+    transactionStore.setSummaryLoading(true)
+    try {
+      await getPendingTransaction(newAccountId)
+      await getAdvisor(newAccountId)
+      await getSummary(newAccountId)
+    } finally {
+      transactionStore.setSummaryLoading(false)
+    }
+  }
+)
+
+// Pantau juga posisi slide tambah akun → kalau masuk/ keluar slide, refresh summary.
+watch(
+  () => bankStore.atAddCard,
+  (isAdd) => {
+    if (isAdd) {
+      // Masuk slide tambah akun: sembunyikan summary (Placeholder di OverviewCard).
+      transactionStore.setSummaryLoading(false)
+    } else if (bankStore.activeAccountId) {
+      // Keluar dari slide tambah → kembali ke akun terakhir, fetch ulang.
+      transactionStore.setSummaryLoading(true)
+      getPendingTransaction(bankStore.activeAccountId)
+      getAdvisor(bankStore.activeAccountId)
+      getSummary(bankStore.activeAccountId).finally(() =>
+        transactionStore.setSummaryLoading(false)
+      )
+    }
   }
 )
 </script>

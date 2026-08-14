@@ -1,9 +1,24 @@
 <template>
   <div class="card-wrapper" @touchstart="onTouchStart" @touchend="onTouchEnd">
 
-    <Transition v-if="bankStore.accounts.length > 0" :name="transitionName" mode="out-in">
+    <Transition :name="transitionName" mode="out-in">
+      <!-- ADD ACCOUNT CARD (slide terakhir setelah swipe ke kiri) -->
       <div
-:key="bankStore.currentAccount?.id"
+v-if="bankStore.atAddCard" :key="'add-account-card'"
+        class="relative w-full rounded-3xl p-6 border border-dashed overflow-hidden flex flex-col items-center justify-center gap-3 text-center cursor-pointer active:scale-[0.98] transition-all duration-500"
+        :class="ui.isDark
+          ? 'bg-slate-900 border-slate-700'
+          : 'bg-white border-gray-200'" @click="accountManager.open()">
+
+        <UIcon name="i-heroicons-plus-circle" class="text-4xl text-amber-500" />
+        <p class="font-bold" :class="ui.isDark ? 'text-white' : 'text-slate-900'">Tambah Akun Dompet</p>
+        <p class="text-[11px] text-slate-400">Tap untuk buat akun bank / dompet lainnya</p>
+        <span class="text-[10px] text-slate-400 mt-1">Geser ke kanan untuk kembali</span>
+      </div>
+
+      <!-- ACCOUNT CARD -->
+      <div
+v-else-if="bankStore.accounts.length > 0" :key="bankStore.currentAccount?.id"
         class="relative w-full rounded-3xl p-6 border overflow-hidden transition-all duration-500" :class="ui.isDark
           ? 'bg-slate-900 border-slate-800'
           : 'bg-white border-gray-100'">
@@ -33,10 +48,13 @@ class="text-sm mb-1 transition-colors duration-700"
             <p class="text-sm text-gray-400">Bank Account</p>
 
             <img
-:src="bankStore.currentBankTheme.logo" class="object-contain mt-1"
-              :class="bankStore.currentBankTheme.imSize" >
+v-if="bankStore.currentBankTheme.isImage" :src="bankStore.currentBankTheme.logo"
+              class="object-contain mt-1" :class="bankStore.currentBankTheme.imSize">
+            <UIcon
+v-else :name="bankStore.currentBankTheme.logo" class="text-3xl mt-1"
+              :class="ui.isDark ? 'text-slate-300' : 'text-slate-500'" />
 
-            <span v-if="bankStore.accounts.length > 1" class="text-[10px] text-gray-400 mt-2">
+            <span class="text-[10px] text-gray-400 mt-2">
               Swipe ← →
             </span>
           </div>
@@ -60,17 +78,21 @@ class="mt-5 rounded-2xl p-3 flex items-center justify-between transition-all dur
           <UIcon name="i-heroicons-sparkles" class="text-2xl text-amber-400" />
         </div>
       </div>
-    </Transition>
 
-    <div
-v-else
-      class="w-full rounded-3xl p-8 border border-dashed border-slate-300 dark:border-slate-700 text-center flex flex-col items-center gap-3">
-      <UIcon name="i-heroicons-credit-card" class="text-4xl text-slate-400 dark:text-slate-500" />
-      <p class="text-sm text-slate-500 dark:text-slate-400">Kamu belum mengonfigurasi dompet digital atau akun bank.</p>
-      <button class="px-4 py-2 bg-amber-500 text-slate-950 font-bold rounded-xl text-xs active:scale-95 transition">
-        + Buat Akun Dompet
-      </button>
-    </div>
+      <!-- EMPTY STATE (belum ada akun sama sekali) -->
+      <div
+v-else :key="'empty-state'"
+        class="w-full rounded-3xl p-8 border border-dashed border-slate-300 dark:border-slate-700 text-center flex flex-col items-center gap-3">
+        <UIcon name="i-heroicons-credit-card" class="text-4xl text-slate-400 dark:text-slate-500" />
+        <p class="text-sm text-slate-500 dark:text-slate-400">Kamu belum mengonfigurasi dompet digital atau akun bank.
+        </p>
+        <button
+class="px-4 py-2 bg-amber-500 text-slate-950 font-bold rounded-xl text-xs active:scale-95 transition"
+          @click="accountManager.open()">
+          + Buat Akun Dompet
+        </button>
+      </div>
+    </Transition>
 
   </div>
 </template>
@@ -80,10 +102,12 @@ import { ref } from 'vue'
 import { useUIStore } from '~/stores/ui'
 import { useTransactionStore } from '~/stores/useTransactionStore'
 import { useBankStore } from '~/stores/banks' // 👈 Import bank store pilihanmu
+import { useAccountManager } from '~/composables/useAccountManager'
 
 const ui = useUIStore()
 const transactionStore = useTransactionStore()
 const bankStore = useBankStore() // 👈 Inisialisasi store
+const accountManager = useAccountManager()
 
 const transitionName = ref('bank-swipe-right')
 
@@ -100,12 +124,29 @@ function onTouchEnd(e: TouchEvent) {
 
   if (Math.abs(diff) < 40) return
 
+  if (bankStore.atAddCard) {
+    // Sudah di slide "Tambah Akun": geser kanan kembali ke akun terakhir.
+    if (diff > 0) {
+      bankStore.setAddCard(false)
+      transitionName.value = 'bank-swipe-left'
+    }
+    return
+  }
+
+  if (bankStore.accounts.length === 0) return
+
   if (diff < 0) {
-    // Geser ke kanan (Next)
+    // Geser ke kiri → nextBank sekarang bound di ujung kanan (tidak wrap).
     const direct = bankStore.nextBank()
-    if (direct !== 'none') transitionName.value = 'bank-swipe-right'
+    if (direct === 'none') {
+      // sudah di akun terakhir → buka slide "Tambah Akun"
+      bankStore.setAddCard(true)
+      transitionName.value = 'bank-swipe-right'
+    } else {
+      transitionName.value = 'bank-swipe-right'
+    }
   } else {
-    // Geser ke kiri (Prev)
+    // Geser ke kanan → prevBank bound di index 0 (tidak wrap).
     const direct = bankStore.prevBank()
     if (direct !== 'none') transitionName.value = 'bank-swipe-left'
   }

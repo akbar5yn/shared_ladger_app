@@ -11,9 +11,8 @@ id="content-container"
         </span>
 
         <button
-class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all active:scale-95 justify-center"
-          style="min-width: 115px"
-          :class="isIncomeMode
+          class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all active:scale-95 justify-center"
+          style="min-width: 115px" :class="isIncomeMode
             ? 'bg-emerald-500/10 text-emerald-500'
             : 'bg-amber-500/10 text-amber-500'
             " @click="isIncomeMode = !isIncomeMode">
@@ -26,7 +25,33 @@ class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold 
         </button>
       </div>
 
-      <div class="mt-1 flex flex-col gap-4">
+      <!-- PLACEHOLDER: sedang di slide "Tambah Akun", tiadakan summary -->
+      <div v-if="bankStore.atAddCard" class="mt-4 py-10 flex flex-col items-center gap-2 text-center">
+        <UIcon name="i-heroicons-plus-circle" class="text-3xl text-amber-500" />
+        <p class="text-xs italic text-slate-400">
+          Buat akun dompet dulu untuk melihat ringkasan bulanannya.
+        </p>
+      </div>
+
+      <!-- SKELETON: loading fetch summary/advisor saat ganti akun -->
+      <div v-else-if="transactionStore.isSummaryLoading" class="mt-4 flex flex-col gap-4">
+        <div class="h-8 w-48 animate-pulse rounded-lg" :class="ui.isDark ? 'bg-slate-700' : 'bg-slate-200'" />
+        <div class="flex flex-col gap-3">
+          <div v-for="i in 3" :key="i" class="flex flex-col gap-1.5">
+            <div class="flex justify-between">
+              <div class="h-3 w-16 animate-pulse rounded" :class="ui.isDark ? 'bg-slate-800' : 'bg-slate-100'" />
+              <div class="h-3 w-24 animate-pulse rounded" :class="ui.isDark ? 'bg-slate-800' : 'bg-slate-100'" />
+            </div>
+            <div class="h-2 rounded-full overflow-hidden" :class="ui.isDark ? 'bg-slate-800' : 'bg-slate-100'">
+              <div
+class="h-full w-1/3 animate-pulse rounded-full"
+                :class="ui.isDark ? 'bg-slate-700' : 'bg-slate-200'" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="mt-1 flex flex-col gap-4">
         <div class="flex items-baseline gap-2">
           <h1
 class="text-2xl font-bold tracking-tight transition-colors duration-500" :class="[
@@ -305,8 +330,10 @@ v-for="flag in transactionStore.advisorData?.flags" :key="flag"
 <script setup lang="ts">
 import { useUIStore } from "~/stores/ui";
 import { useTransactionStore } from "~/stores/useTransactionStore";
+import { useBankStore } from "~/stores/banks";
 
 const transactionStore = useTransactionStore();
+const bankStore = useBankStore();
 const ui = useUIStore();
 
 const isIncomeMode = ref(false);

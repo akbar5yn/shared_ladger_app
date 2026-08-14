@@ -15,6 +15,8 @@ export const useTransactionStore = defineStore('transaction', {
     pendingOfTransactions: [] as IDataTransaction[],
     allCategoryOptions: [] as IDynamicOption[],
     advisorData: null as IMonthlyAdvisorData | null,
+    // Flag loading khusus fetch summary/advisor saat ganti akun (swipe).
+    isSummaryLoading: false as boolean,
   }),
 
   getters: {
@@ -114,7 +116,11 @@ export const useTransactionStore = defineStore('transaction', {
     async setMonthlyAdvisor(payload: IMonthlyAdvisorData) {
       this.advisorData = payload
       this.updateActualBalance(payload.income, 'income')
-    }
+    },
+
+    setSummaryLoading(status: boolean) {
+      this.isSummaryLoading = status
+    },
   },
 
 })

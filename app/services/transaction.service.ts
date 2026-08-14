@@ -16,6 +16,13 @@ export function transactionService() {
       })
     },
 
+    createAccount(name: string): Promise<IDataAccountResponse> {
+      return apiFetch('/accounts', {
+        method: 'POST',
+        body: { name },
+      })
+    },
+
     getPending(accountId: string): Promise<IDataTransactionResponse> {
       return apiFetch('/transactions/pending', {
         method: 'GET',

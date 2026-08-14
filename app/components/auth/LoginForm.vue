@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-4 text-base mt-10">
     <section class="text-black">
-      <h1 class="text-[30px] text-center font-bold">Shared Ledger</h1>
+      <h1 class="text-[30px] text-center font-bold" @click="onTitleTap">Shared Ledger</h1>
       <p class="text-center text-[13px] mt-2 text-gray-500">
         Welcome. This is our private space for financial clarity and communication. Sign
         in to manage our shared economy and maintain seamless family connection.
@@ -87,6 +87,7 @@ id="password" v-model="formPassword" type="password" class="w-full text-sm" auto
 <script setup lang="ts">
 import { useAuthStore } from "~/stores/auth";
 const authStore = useAuthStore();
+const router = useRouter();
 const props = defineProps<{
   email: string;
   password: string;
@@ -94,6 +95,21 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(["update:email", "update:password", "submit", "toggleMode"]);
+
+// Debug: tap title "Shared Ledger" 3x untuk buka halaman API log
+let tapCount = 0;
+let tapTimer: ReturnType<typeof setTimeout> | null = null;
+const onTitleTap = () => {
+  tapCount++;
+  if (tapTimer) clearTimeout(tapTimer);
+  tapTimer = setTimeout(() => {
+    tapCount = 0;
+  }, 800);
+  if (tapCount >= 3) {
+    tapCount = 0;
+    router.push("/debug-log");
+  }
+};
 
 const formEmail = computed({
   get: () => props.email,

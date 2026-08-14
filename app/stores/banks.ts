@@ -2,13 +2,42 @@ import { defineStore } from 'pinia'
 import aladinIc from '~/assets/banks/aladinIc.png'
 import bcaIc from '~/assets/banks/bcaIc.png'
 import briIc from '~/assets/banks/briIc.png'
+import bniIc from '~/assets/banks/bniIc.svg'
 import type { IDataAccount } from '~/types/ITransaction';
 
-const ASSET_MAP: Record<string, { logo: string; glowColor: string; imSize: string }> = {
-    aladin: { logo: aladinIc, glowColor: '#3b82f6', imSize: 'w-14 h-10' },
-    bca: { logo: bcaIc, glowColor: '#3b82f6', imSize: 'w-14 h-10' },
-    bri: { logo: briIc, glowColor: '#0ea5e9', imSize: 'w-14 h-10' },
-    default: { logo: aladinIc, glowColor: '#64748b', imSize: 'w-14 h-10' }
+// logo bisa berupa URL gambar (bank yang didukung) ATAU string icon (fallback).
+// isImage: true kalau logo berupa URL gambar, false kalau berupa nama UIcon.
+interface BankAsset {
+    logo: string
+    glowColor: string
+    imSize: string
+    isImage: boolean
+}
+
+// Default fallback bertipe eksplisit BankAsset (bukan lewat Record index)
+// supaya akses ASSET_MAP.default selalu BankAsset, bukan BankAsset | undefined.
+const DEFAULT_ASSET: BankAsset = {
+    logo: 'i-heroicons-credit-card',
+    glowColor: '#64748b',
+    imSize: 'w-14 h-10',
+    isImage: false,
+}
+
+// Pakai tipe object dengan key pasti (bukan Record<string, ...>) biar
+// akses .aladin/.bca/.default tidak di-infer undefined oleh noUncheckedIndexedAccess.
+const ASSET_MAP: {
+    aladin: BankAsset
+    bca: BankAsset
+    bri: BankAsset
+    bni: BankAsset
+    default: BankAsset
+} = {
+    aladin: { logo: aladinIc, glowColor: '#3b82f6', imSize: 'w-14 h-10', isImage: true },
+    bca: { logo: bcaIc, glowColor: '#3b82f6', imSize: 'w-14 h-10', isImage: true },
+    bri: { logo: briIc, glowColor: '#0ea5e9', imSize: 'w-14 h-10', isImage: true },
+    bni: { logo: bniIc, glowColor: '#F47325', imSize: 'w-14 h-10', isImage: true },
+    // Fallback untuk bank tak dikenal (Dana, Gopay, custom): pakai icon, bukan gambar Aladin.
+    default: DEFAULT_ASSET,
 }
 
 export const useBankStore = defineStore('banks', {
@@ -17,6 +46,8 @@ export const useBankStore = defineStore('banks', {
         currentIndex: 0 as number,
         isLoading: false as boolean,
         activeAccountId: '' as string,
+        // True saat user berada di slide "Tambah Akun" (bukan kartu akun sungguhan).
+        atAddCard: false as boolean,
     }),
 
     getters: {
@@ -30,18 +61,15 @@ export const useBankStore = defineStore('banks', {
             return account as unknown as IDataAccount
         },
 
-        currentBankTheme(): { logo: string; glowColor: string; imSize: string } {
+        currentBankTheme(): BankAsset {
             const account = this.currentAccount
-            if (!account) return ASSET_MAP.default as { logo: string; glowColor: string; imSize: string }
+            if (!account) return DEFAULT_ASSET
 
             const key = account.name.toLowerCase()
-            const selectedAsset = ASSET_MAP[key]
+            // key bertipe string → akses index bisa undefined; fallback eksplisit.
+            const selectedAsset = (ASSET_MAP as Record<string, BankAsset>)[key]
 
-            if (selectedAsset) {
-                return selectedAsset as { logo: string; glowColor: string; imSize: string }
-            }
-
-            return ASSET_MAP.default as { logo: string; glowColor: string; imSize: string }
+            return selectedAsset ?? DEFAULT_ASSET
         }
     },
 
@@ -52,16 +80,23 @@ export const useBankStore = defineStore('banks', {
             }
         },
 
+        setAddCard(status: boolean) {
+            this.atAddCard = status
+        },
+
         nextBank(): 'right' | 'none' {
-            if (this.accounts.length <= 1) return 'none'
-            this.currentIndex = (this.currentIndex + 1) % this.accounts.length
+            // Jangan wrap-around: stop di akun terakhir (index 0..length-1).
+            // Boundary "tambah akun" ditangani oleh BalanceCard lewat isAtLastAccount.
+            if (this.currentIndex >= this.accounts.length - 1) return 'none'
+            this.currentIndex = this.currentIndex + 1
             this.updateActiveId()
             return 'right'
         },
 
         prevBank(): 'left' | 'none' {
-            if (this.accounts.length <= 1) return 'none'
-            this.currentIndex = (this.currentIndex - 1 + this.accounts.length) % this.accounts.length
+            // Stop di index 0 — ini yang diminta biar gak scroll terus ke kiri.
+            if (this.currentIndex <= 0) return 'none'
+            this.currentIndex = this.currentIndex - 1
             this.updateActiveId()
             return 'left'
         },
@@ -70,6 +105,7 @@ export const useBankStore = defineStore('banks', {
         setAccounts(payloadData: IDataAccount[]) {
             this.accounts = payloadData
             this.currentIndex = 0 // Kembalikan slide ke kartu pertama
+            this.atAddCard = false // reset posisi slide tambah akun
             this.updateActiveId() // Otomatis set ID aktif dari kartu pertama tersebut
         }
     }

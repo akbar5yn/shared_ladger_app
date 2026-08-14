@@ -59,6 +59,7 @@ export const useAuth = () => {
     const bankStore = useBankStore();
     const { getAccount } = useBankObserver();
     await getAccount();
+
     const firstAccount = bankStore.accounts[0];
     if (firstAccount) {
       await transactionStore.setActualBalance(firstAccount.balance);
