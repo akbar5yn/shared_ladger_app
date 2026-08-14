@@ -2,6 +2,8 @@ import type { FetchError } from 'ofetch'
 import { loginService, type TCredentials } from '~/services/auth.service'
 import { useAuthStore } from '~/stores/auth';
 import { useTransactionStore } from '~/stores/useTransactionStore';
+import { useBankStore } from '~/stores/banks';
+import { useBankObserver } from '~/composables/useBankObserver';
 import type { TLoginResult } from '~/types/IUser'
 
 export const useAuth = () => {
@@ -52,7 +54,17 @@ export const useAuth = () => {
     }
 
     await authStore.setLoginAction(res)
-    await transactionStore.setActualBalance(res.data.user.actualBalance)
+
+    // Balance ada di Account, bukan User (User tidak punya field actualBalance)
+    const bankStore = useBankStore();
+    const { getAccount } = useBankObserver();
+    await getAccount();
+    const firstAccount = bankStore.accounts[0];
+    if (firstAccount) {
+      await transactionStore.setActualBalance(firstAccount.balance);
+      bankStore.updateActiveId();
+    }
+
     await router.push('/dashboard')
 
     setTimeout(() => {

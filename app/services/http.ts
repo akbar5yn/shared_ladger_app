@@ -7,12 +7,15 @@ type ApiOptions = FetchOptions<'json'>
 export const apiFetch = async <T>(url: string, options: ApiOptions = {}) => {
 
   const { value } = await Preferences.get({ key: 'auth_token' })
-
-  console.log('TOKEN:', value)
   const token = value
-  console.log('token:', value)
+
+  let apiBase = useRuntimeConfig().public.apiBase
+  if (apiBase && !/^https?:\/\//.test(apiBase)) {
+    apiBase = `https://${apiBase}`
+  }
+
   return ofetch<T>(url, {
-    baseURL: useRuntimeConfig().public.apiBase,
+    baseURL: apiBase,
     ...options,
     headers: {
       ...(options.headers ?? {}),
