@@ -2,7 +2,9 @@ import { defineStore } from 'pinia'
 import aladinIc from '~/assets/banks/aladinIc.png'
 import bcaIc from '~/assets/banks/bcaIc.png'
 import briIc from '~/assets/banks/briIc.png'
-import bniIc from '~/assets/banks/bniIc.svg'
+import bniIc from '~/assets/banks/bniIc.webp'
+import danaIc from '~/assets/banks/danaIc.png'
+import gopayIc from '~/assets/banks/gopayIc.webp'
 import type { IDataAccount } from '~/types/ITransaction';
 
 // logo bisa berupa URL gambar (bank yang didukung) ATAU string icon (fallback).
@@ -30,13 +32,17 @@ const ASSET_MAP: {
     bca: BankAsset
     bri: BankAsset
     bni: BankAsset
+    dana: BankAsset
+    gopay: BankAsset
     default: BankAsset
 } = {
     aladin: { logo: aladinIc, glowColor: '#3b82f6', imSize: 'w-14 h-10', isImage: true },
     bca: { logo: bcaIc, glowColor: '#3b82f6', imSize: 'w-14 h-10', isImage: true },
     bri: { logo: briIc, glowColor: '#0ea5e9', imSize: 'w-14 h-10', isImage: true },
     bni: { logo: bniIc, glowColor: '#F47325', imSize: 'w-14 h-10', isImage: true },
-    // Fallback untuk bank tak dikenal (Dana, Gopay, custom): pakai icon, bukan gambar Aladin.
+    dana: { logo: danaIc, glowColor: '#1e88e5', imSize: 'w-14 h-10', isImage: true },
+    gopay: { logo: gopayIc, glowColor: '#00aa13', imSize: 'w-14 h-10', isImage: true },
+    // Fallback untuk bank tak dikenal (custom): pakai icon, bukan gambar.
     default: DEFAULT_ASSET,
 }
 

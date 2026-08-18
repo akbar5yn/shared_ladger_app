@@ -318,7 +318,9 @@ v-for="flag in transactionStore.advisorData?.flags" :key="flag"
 
 
 
-        <div v-else class="py-4 text-center text-xs italic text-slate-500 flex flex-col items-center gap-2">
+        <div
+v-if="(!isIncomeMode && !transactionStore.advisorData) || (isIncomeMode && transactionStore.income === 0)"
+          class="py-4 text-center text-xs italic text-slate-500 flex flex-col items-center gap-2">
           <UIcon name="i-heroicons-circle-stack" class="text-2xl opacity-20" />
           Belum ada data {{ isIncomeMode ? "income" : "spending" }} bulan ini.
         </div>
