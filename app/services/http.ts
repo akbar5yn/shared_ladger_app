@@ -1,6 +1,7 @@
 import { Preferences } from '@capacitor/preferences';
 import { ofetch, type FetchOptions } from 'ofetch'
 import { useApiLogger } from '~/composables/useApiLogger'
+import { getApiBase } from '~/composables/useApiBase'
 
 
 type ApiOptions = FetchOptions<'json'>
@@ -10,14 +11,8 @@ export const apiFetch = async <T>(url: string, options: ApiOptions = {}) => {
   const { value } = await Preferences.get({ key: 'auth_token' })
   const token = value
 
-  let apiBase = useRuntimeConfig().public.apiBase
-  if (apiBase && !/^https?:\/\//.test(apiBase)) {
-    apiBase = `https://${apiBase}`
-  }
-  // Hilangkan trailing slash supaya tidak jadi double slash (//path)
-  if (apiBase) {
-    apiBase = apiBase.replace(/\/+$/, '')
-  }
+  // Ambil base URL dari cache (di-set saat boot) agar konsisten dengan socket.
+  const apiBase = getApiBase()
 
   const logger = useApiLogger()
   const method = (options.method ?? 'GET').toUpperCase()

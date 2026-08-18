@@ -1,18 +1,13 @@
 // todo 1. add some syncTransactionsTask
 
-import { registerPlugin } from '@capacitor/core'
 import { transactionService } from '~/services/transaction.service'
 import { useTransactionStore } from '~/stores/useTransactionStore'
 import { isAllowedPackage } from '../../constant/package.helper'
 import type { TBankNotificationPayload } from '~/types/INotification';
 import { useBankStore } from '~/stores/banks';
+import { notificationStorage } from '~/services/notificationStorage';
 
-interface NotificationStoragePlugin {
-  getPendingNotifications(): Promise<{ data?: string }>
-  removePendingNotification(options: { id: string }): Promise<void>
-}
-
-const NotificationStorage = registerPlugin<NotificationStoragePlugin>('NotificationStorage')
+const NotificationStorage = notificationStorage()
 let isObserved = false
 
 export const useBankObserver = () => {
@@ -58,8 +53,10 @@ export const useBankObserver = () => {
 
         if (res?.success === true) {
           const tx = res.data.transactions
+          // addPending sudah dedupe by id -> hindari duplikat dari
+          // listener socket ledger:pending untuk notif yang sama.
           if (tx.accountId === bankStore.activeAccountId) {
-            transactionStore.pendingOfTransactions.unshift(tx)
+            transactionStore.addPending(tx)
           }
           if (item.id) {
             await NotificationStorage.removePendingNotification({
@@ -86,8 +83,10 @@ export const useBankObserver = () => {
         const res = await sendToIngest(customEvent.detail, 'realtime')
         if (res?.success === true) {
           const tx = res.data.transactions
+          // addPending dedupe by id -> mencegah dobel sama seperti
+          // listener socket ledger:pending.
           if (tx.accountId === bankStore.activeAccountId) {
-            transactionStore.pendingOfTransactions.unshift(tx)
+            transactionStore.addPending(tx)
           }
           const pendingId = customEvent.detail.id
           if (pendingId) {
@@ -116,14 +115,18 @@ export const useBankObserver = () => {
   }
 
   async function getAccount() {
-
     try {
       const res = await transactionService().getAccount()
       if (res.success) {
+        const prevIndex = bankStore.currentIndex
         bankStore.setAccounts(res.data)
-        bankStore.currentIndex = 0
+        // Pertahankan posisi swipe (jangan reset ke 0) kalau masih valid,
+        // biar notifikasi realtime gak "loncat" ke kartu pertama.
+        if (prevIndex > 0 && prevIndex < res.data.length) {
+          bankStore.currentIndex = prevIndex
+          bankStore.updateActiveId()
+        }
       }
-
     } catch (err) {
       console.error('GET ACCOUNT ERROR', err)
     }

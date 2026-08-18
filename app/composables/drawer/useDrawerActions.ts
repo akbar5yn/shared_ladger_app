@@ -139,7 +139,11 @@ export const useDrawerActions = () => {
         }, 300)
       }
       if (res.success) {
+        // Update lokal langsung (optimistic) dari response confirm.
         transactionStore.confirmTransaction(res.data)
+        // Selanjutnya UI di-refresh murni dari realtime: server emit
+        // `ledger:updated` (balance + summary + advisor) via Socket.IO
+        // setelah transaksi tersimpan di DB. Tidak ada REST fallback polling.
         setTimeout(() => {
           notifySuccess('Transaksi berhasil dicatat', 'success')
         }, 300)

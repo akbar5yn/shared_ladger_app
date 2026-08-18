@@ -101,6 +101,17 @@ export interface IDataAccount {
   createdAt: Date
 }
 
+// Response dari GET /transactions/confirmed (riwayat transaksi terkonfirmasi).
+// Backend mengembalikan object { account, transactions, allCategoryOptions }.
+export interface IHistoryResponse {
+  success: boolean
+  data: {
+    account: { id: string; name: string }
+    transactions: IDataTransaction[]
+    allCategoryOptions: IDynamicOption[]
+  }
+}
+
 export interface IDeletePendingData {
   message: string
   id: string

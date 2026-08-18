@@ -16,7 +16,7 @@ id="drawer"
     <div
 id="cursor-grab" class="pt-6 pb-3 cursor-grab active:cursor-grabbing touch-none select-none"
       @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
-      <div class="w-16 h-1.5 bg-gray-200 rounded-full mx-auto"/>
+      <div class="w-16 h-1.5 bg-gray-200 rounded-full mx-auto" />
       <div class="title-path pt-4 text-xl px-6">Dashboard</div>
     </div>
 
@@ -139,16 +139,17 @@ class="font-bold text-sm shrink-0" :class="item.type === 'income' ? 'text-emeral
             <div class="relative flex flex-wrap gap-2 border-t pt-2 border-gray-100 dark:border-slate-700">
               <!--ANCHOR OPTIONS -->
               <button
-v-for="opt in item.dynamicOptions" :key="opt.value" :class="createColorFn(opt.color)(ui.isDark)" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg font-bold text-[10px] active:scale-95 transition-all shadow-sm flex-shrink-0"
+v-for="opt in item.dynamicOptions" :key="opt.value" :class="createColorFn(opt.color)(ui.isDark)"
+                class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg font-bold text-[10px] active:scale-95 transition-all shadow-sm flex-shrink-0"
                 @click="
-                opt.value === 'other'
-                  ? openEditModal(item)
-                  : handleFinalConfirm({
-                    id: item.id,
-                    category: opt.value as TCategory,
-                    type: opt.type
-                  }, item.accountId)
-                ">
+                  opt.value === 'other'
+                    ? openEditModal(item)
+                    : handleFinalConfirm({
+                      id: item.id,
+                      category: opt.value as TCategory,
+                      type: opt.type
+                    }, item.accountId)
+                  ">
                 <UIcon v-if="opt.icon" :name="opt.icon" class="shrink-0" />
                 <span class="truncate">{{ opt.label }}</span>
               </button>
@@ -158,8 +159,7 @@ class="absolute top-2 right-2 w-9 h-9 flex items-center justify-center rounded-l
                 :class="ui.isDark
                   ? 'bg-gray-300 text-slate-900'
                   : 'bg-slate-100 text-gray-500'
-                  "
-                @click="deleteTransaction(item.accountId, item.id)">
+                  " @click="deleteTransaction(item.accountId, item.id)">
                 <UIcon name="i-heroicons-trash" />
               </button>
             </div>
@@ -311,14 +311,16 @@ class="text-[10px] mb-2 font-bold uppercase tracking-widest"
 
               <div class="grid grid-cols-2 gap-2">
                 <button
-v-for="item in transactionStore.allCategoryOptions" :key="item.label" :class="createColorFn(item.color)(ui.isDark)" class="flex items-center gap-2 p-3 rounded-xl font-bold text-xs active:scale-95 transition-all border border-transparent hover:border-current"
+v-for="item in transactionStore.allCategoryOptions" :key="item.label"
+                  :class="createColorFn(item.color)(ui.isDark)"
+                  class="flex items-center gap-2 p-3 rounded-xl font-bold text-xs active:scale-95 transition-all border border-transparent hover:border-current"
                   @click="
-                  handleFinalConfirm({
-                    id: detailTransaction?.id,
-                    category: item.value as TCategory,
-                    type: item.type,
-                  }, detailTransaction?.accountId ?? '')
-                  ">
+                    handleFinalConfirm({
+                      id: detailTransaction?.id,
+                      category: item.value as TCategory,
+                      type: item.type,
+                    }, detailTransaction?.accountId ?? '')
+                    ">
                   <UIcon :name="item.icon" />
                   {{ item.label }}
                 </button>
@@ -329,10 +331,7 @@ v-for="item in transactionStore.allCategoryOptions" :key="item.label" :class="cr
       </template>
     </UModal>
 
-    <ConfirmModal
-variant="danger" icon="i-heroicons-trash" title="Hapus transaksi?"
-      description="Saldo akun akan diperbarui otomatis setelah transaksi dihapus." confirm-text="Ya, hapus sekarang"
-      cancel-text="Batal" />
+    <ConfirmModal />
   </section>
 </template>
 

@@ -4,6 +4,7 @@ import { useAuthStore } from '~/stores/auth';
 import { useTransactionStore } from '~/stores/useTransactionStore';
 import { useBankStore } from '~/stores/banks';
 import { useBankObserver } from '~/composables/useBankObserver';
+import { useSocket } from '~/composables/useSocket';
 import type { TLoginResult } from '~/types/IUser'
 
 export const useAuth = () => {
@@ -54,7 +55,8 @@ export const useAuth = () => {
     }
 
     await authStore.setLoginAction(res)
-
+    // Hubungkan realtime socket setelah token tersedia.
+    useSocket().connect()
     // Balance ada di Account, bukan User (User tidak punya field actualBalance)
     const bankStore = useBankStore();
     const { getAccount } = useBankObserver();
@@ -74,6 +76,7 @@ export const useAuth = () => {
   }
 
   const handleLogout = () => {
+    useSocket().disconnect()
     authStore.logout()
     router.push('/login')
   }

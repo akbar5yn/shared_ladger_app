@@ -40,7 +40,15 @@ export const useTransactionStore = defineStore('transaction', {
       const capStorage = $capStorage as CapStorage
       const data = await capStorage.getItem('transaction_store')
       if (data) {
-        this.$patch(JSON.parse(data))
+        const parsed = JSON.parse(data)
+        // Pastikan history selalu array (data lama/persisted bisa non-array).
+        if (parsed && !Array.isArray(parsed.history)) {
+          parsed.history = []
+        }
+        if (parsed && !Array.isArray(parsed.pendingOfTransactions)) {
+          parsed.pendingOfTransactions = []
+        }
+        this.$patch(parsed)
       }
     },
 
@@ -73,6 +81,20 @@ export const useTransactionStore = defineStore('transaction', {
       this.allCategoryOptions = payload.data.allCategoryOptions
       await this.saveToDisk()
       console.log(this.pendingOfTransactions, 'cekkk')
+    },
+
+    // Set riwayat transaksi terkonfirmasi dari backend (page History).
+    setHistory(transactions: IDataTransaction[]) {
+      this.history = Array.isArray(transactions) ? transactions : []
+      this.saveToDisk()
+    },
+
+    // Tambah satu transaksi pending (dari event realtime) tanpa duplikat.
+    addPending(tx: IDataTransaction) {
+      if (!tx?.id) return
+      if (this.pendingOfTransactions.some((t) => t.id === tx.id)) return
+      this.pendingOfTransactions.unshift(tx)
+      this.saveToDisk()
     },
 
     async setActualBalance(amount: number) {

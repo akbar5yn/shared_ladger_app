@@ -1,6 +1,6 @@
 import type { TBankNotificationPayload } from '~/types/INotification';
 import { apiFetch } from './http'
-import type { IConfirmTransaction, IConfirmTransactionResponse, IDataAccountResponse, IDataTransactionResponse, IDeletePendingResponse, IIngestTransactionResponse, IMonthlyAdvisorResponse, IMonthlySummaryResponse } from '~/types/ITransaction'
+import type { IConfirmTransaction, IConfirmTransactionResponse, IDataAccountResponse, IDataTransactionResponse, IDeletePendingResponse, IHistoryResponse, IIngestTransactionResponse, IMonthlyAdvisorResponse, IMonthlySummaryResponse } from '~/types/ITransaction'
 export function transactionService() {
   return {
     ingest(payload: TBankNotificationPayload): Promise<IIngestTransactionResponse> {
@@ -32,8 +32,13 @@ export function transactionService() {
       })
     },
 
-    getHistory() {
-      return apiFetch('/transactions/confirmed')
+    getHistory(accountId: string): Promise<IHistoryResponse> {
+      return apiFetch('/transactions/confirmed', {
+        method: 'GET',
+        headers: {
+          'x-account-id': accountId,
+        },
+      })
     },
 
     confirm(data: IConfirmTransaction, accountId: string): Promise<IConfirmTransactionResponse> {
