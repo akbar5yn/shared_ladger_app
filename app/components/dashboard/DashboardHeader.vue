@@ -11,8 +11,8 @@ src="/icons/user.png" alt="user_avatar" width="50" height="50"
       <div class="flex flex-col gap-0 justify-center">
         <span class="day text-slate-900" :class="[{ 'font-light': isDark }]">{{ greeting }}</span>
         <span class="username text-slate-900" :class="[{ 'font-light': isDark }]" @click="onProfileTap">{{
-          userInfo?.name ?? "Guest Mode"
-          }}</span>
+          userInfo?.name ?? "User"
+        }}</span>
       </div>
     </div>
     <div class="toggle-btn-wrapper">

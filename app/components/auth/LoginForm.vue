@@ -1,6 +1,6 @@
 <template>
-  <div class="flex flex-col gap-4 text-base mt-10">
-    <section class="text-black">
+  <div class="flex flex-col gap-4 text-base mt-10" :class="{ 'dark-text': isDark }">
+    <section class="text-black" :class="{ 'dark-section': isDark }">
       <h1 class="text-[30px] text-center font-bold" @click="onTitleTap">Shared Ledger</h1>
       <p class="text-center text-[13px] mt-2 text-gray-500">
         Welcome. This is our private space for financial clarity and communication. Sign
@@ -10,7 +10,9 @@
     <section class="h-fit flex flex-col">
       <form class="flex flex-col gap-2 text-black" @submit.prevent="emit('submit')">
         <div class="flex items-center justify-between px-[5px] capitalize">
-          <label for="email" class="text-[13px] font-medium px-[5px]">E-mail</label>
+          <label
+for="email" class="text-[13px] font-medium px-[5px]"
+            :class="[isDark ? 'text-white' : 'text-gray-800']">E-mail</label>
           <Transition name="error" mode="out-in">
             <span v-if="authStore.errors?.Email" key="email-error" class="text-red-400 text-xs">
               {{ authStore.errors.Email[0] }}
@@ -25,15 +27,20 @@ v-else-if="authStore.errors?.Format && formEmail?.trim().length > 0" key="format
         </div>
 
         <div class="border-animasi-wrapper w-full">
-          <div class="flex items-center gap-1 field-container">
-            <UIcon name="i-heroicons-envelope" class="h-5 w-5 text-gray-500 shrink-0" />
+          <div
+class="flex items-center gap-1 field-container"
+            :class="[isDark ? 'text-white bg-gray-700' : 'bg-gray-200 text-gray-500']">
+            <UIcon name="i-heroicons-envelope" class="h-5 w-5 shrink-0" />
             <input
-id="email" v-model="formEmail" type="text" class="w-full text-sm" autocomplete="off"
-              placeholder="Masukan alamat email anda" @input="authStore.clearField('Email')" >
+id="email" v-model="formEmail" type="text" class="w-full text-sm"
+              :class="[isDark ? 'text-white placeholder-white/60' : 'text-gray-800 placeholder-gray-400']"
+              autocomplete="off" placeholder="Masukan alamat email anda" @input="authStore.clearField('Email')">
           </div>
         </div>
         <div class="flex items-center justify-between px-[5px] capitalize">
-          <label for="password" class="text-[13px] font-medium px-[5px] mt-2">Password</label>
+          <label
+for="password" class="text-[13px] font-medium px-[5px] mt-2"
+            :class="[isDark ? 'text-white' : 'text-gray-800']">Password</label>
           <Transition name="error">
             <div v-if="authStore.errors?.Password">
               <p class="text-red-400 text-xs">
@@ -43,11 +50,14 @@ id="email" v-model="formEmail" type="text" class="w-full text-sm" autocomplete="
           </Transition>
         </div>
         <div class="border-animasi-wrapper w-full">
-          <div class="flex items-center gap-1 field-container">
-            <UIcon name="i-heroicons-lock-closed" class="h-5 w-5 text-gray-500 shrink-0" />
+          <div
+class="flex items-center gap-1 field-container"
+            :class="[isDark ? 'text-white bg-gray-700' : 'bg-gray-200 text-gray-500']">
+            <UIcon name="i-heroicons-lock-closed" class="h-5 w-5 shrink-0" />
             <input
-id="password" v-model="formPassword" type="password" class="w-full text-sm" autocomplete="off"
-              placeholder="Masukan kata sandi anda" >
+id="password" v-model="formPassword" type="password" class="w-full text-sm"
+              :class="[isDark ? 'text-white placeholder-white/60' : 'text-gray-800 placeholder-gray-400']"
+              autocomplete="off" placeholder="Masukan kata sandi anda">
           </div>
         </div>
 
@@ -67,17 +77,13 @@ id="password" v-model="formPassword" type="password" class="w-full text-sm" auto
     </div>
     <div class="flex gap-2 w-full justify-center">
       <div class="google-button-wrapper w-[50%]">
-        <button class="google-button-inner w-full py-2">
+        <button
+class="google-button-inner w-full py-2 border-2 border-gray-400"
+          :class="[isDark ? 'bg-gray-600 border-2 border-gray-400' : 'bg-white']">
           <span class="flex items-center justify-center gap-2">
             <span name="i-simple-icons-google" class="google-icon-gradient">G</span>
-            <span class="font-medium text-gray-700">Sign in Google</span>
+            <span class="font-medium">Sign in Google</span>
           </span>
-        </button>
-      </div>
-      <div class="google-button-wrapper w-[50%]">
-        <button class="google-button-inner w-full py-2 gap-1">
-          <UIcon name="i-simple-icons-apple" class="h-4 w-4 mb-1" />
-          <span> Sign in Apple </span>
         </button>
       </div>
     </div>
@@ -86,7 +92,10 @@ id="password" v-model="formPassword" type="password" class="w-full text-sm" auto
 
 <script setup lang="ts">
 import { useAuthStore } from "~/stores/auth";
+import { useUIStore } from "~/stores/ui";
 const authStore = useAuthStore();
+const themeStore = useUIStore();
+const isDark = computed(() => themeStore.isDark);
 const router = useRouter();
 const props = defineProps<{
   email: string;
@@ -94,7 +103,7 @@ const props = defineProps<{
   isLoading: boolean;
 }>();
 
-const emit = defineEmits(["update:email", "update:password", "submit", "toggleMode"]);
+const emit = defineEmits(["update:email", "update:password", "submit"]);
 
 // Debug: tap title "Shared Ledger" 3x untuk buka halaman API log
 let tapCount = 0;
@@ -136,5 +145,19 @@ const formPassword = computed({
 .error-leave-to {
   opacity: 0;
   transform: translateX(6px);
+}
+
+.dark-section {
+  h1 {
+    color: #ffffff;
+  }
+
+  p {
+    color: rgba(255, 255, 255, 0.65);
+  }
+}
+
+.dark-text {
+  color: #ffffff;
 }
 </style>

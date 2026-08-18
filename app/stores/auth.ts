@@ -5,7 +5,6 @@ import { Preferences } from '@capacitor/preferences'
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null as IUser | null,
-    isGuest: false,
     token: null as string | null,
     isLoggedIn: false,
     hydrated: false,
@@ -26,50 +25,27 @@ export const useAuthStore = defineStore('auth', {
           key: 'auth_token',
           value: data.data.token,
         })
-        await Preferences.set({ key: 'is_guest', value: 'false' })
       }
     },
 
-    async setGuestMode(status: boolean) {
-      this.isGuest = status
-      this.isLoggedIn = false
-      this.token = null
-      this.hydrated = true
-
-      await Preferences.set({
-        key: 'is_guest',
-        value: status.toString(),
-      })
-      await Preferences.remove({ key: 'auth_token' })
-    },
-
     async restoreSession() {
-      // await appLog('[AUTH] restoreSession start')
-
       const { value } = await Preferences.get({ key: 'auth_token' })
-
-      // await appLog('[AUTH] token = ' + (value ? 'FOUND' : 'EMPTY'))
-      // await appLog('[AUTH] isGuest = ' + guestStatus)
 
       if (!value) {
         this.token = null
         this.isLoggedIn = false
         this.hydrated = true
-        // return await appLog('Token empty, isGuest: ' + this.isGuest)
       }
       if (value) {
         this.token = value
         this.isLoggedIn = true
-        this.isGuest = false
       }
 
       this.hydrated = true
-      // await appLog('[AUTH] hydrated = true')
     },
 
     async logout() {
       await Preferences.remove({ key: 'auth_token' })
-      await Preferences.remove({ key: 'is_guest' })
       document.cookie = 'auth_session=; Max-Age=0; path=/;'
       this.hydrated = false
       this.user = null
@@ -93,7 +69,7 @@ export const useAuthStore = defineStore('auth', {
       path: '/',
       sameSite: 'lax',
     }),
-    pick: ['user', 'token', 'isLoggedIn', 'isGuest'],
+    pick: ['user', 'token', 'isLoggedIn'],
     key: 'auth_session',
   },
 })
